@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Quality Data",
+  "type": "object",
+  "required": ["meta", "data"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["extracted_at", "source", "period"],
+      "properties": {
+        "extracted_at": { "type": "string", "format": "date-time" },
+        "source": { "type": "string", "examples": ["QA Excel"] },
+        "period": { "type": "string" }
+      }
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "fpy_pct": { "type": "number" },
+        "defect_count": { "type": "integer" },
+        "complaint_count": { "type": "integer" },
+        "top_defects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "name": { "type": "string" },
+              "count": { "type": "integer" },
+              "cost_mn": { "type": "number", "description": "Cost in million VND" }
+            }
+          }
+        },
+        "ncr_open": { "type": "integer" },
+        "capa_open": { "type": "integer" },
+        "capa_closure_rate_pct": { "type": "number" }
+      }
+    }
+  }
+}

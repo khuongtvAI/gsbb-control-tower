@@ -1,0 +1,11 @@
+node_modules/
+.claude/
+memory/
+*.pptx
+server.js
+create_pptx.mjs
+package-lock.json
+templates/Strategic_Independence_Blueprint.pdf
+*.log
+.DS_Store
+Thumbs.db

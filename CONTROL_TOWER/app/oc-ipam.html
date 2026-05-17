@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>OC & IPAM — GSBB Control Tower</title>
+<link rel="stylesheet" href="assets/ct-shared.css">
+<style>
+.oc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:.875rem; margin-bottom:1.5rem; }
+.oc-mini { background:white; border-radius:10px; padding:1rem; border-left:4px solid #e5e7eb; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.oc-mini.green { border-left-color:#16a34a; } .oc-mini.amber { border-left-color:#f59e0b; } .oc-mini.red { border-left-color:#dc2626; }
+.oc-id { font-size:.65rem; color:#6b7280; text-transform:uppercase; letter-spacing:.05em; }
+.oc-name { font-size:.9rem; font-weight:600; color:#1f2937; margin:.1rem 0 .3rem; }
+.oc-meta { font-size:.72rem; color:#6b7280; }
+.oc-pct-row { display:flex; align-items:center; gap:.5rem; margin-top:.5rem; }
+.oc-bar { flex:1; height:6px; background:#f3f4f6; border-radius:3px; overflow:hidden; }
+.oc-fill { height:100%; border-radius:3px; }
+.oc-fill.green { background:#16a34a; } .oc-fill.amber { background:#f59e0b; } .oc-fill.red { background:#dc2626; }
+.oc-pct-lbl { font-size:.7rem; color:#6b7280; white-space:nowrap; }
+.oc-status { display:inline-flex; align-items:center; gap:.3rem; font-size:.7rem; font-weight:600; margin-top:.4rem; }
+.oc-status.green { color:#16a34a; } .oc-status.amber { color:#f59e0b; } .oc-status.red { color:#dc2626; }
+.oc-status::before { content:'●'; font-size:.55rem; }
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <a class="home-link" href="../../index.html">⬡ Hub</a>
+    <h1>GSBB Control Tower</h1>
+  </div>
+  <nav>
+    <a href="index.html">1. Executive</a>
+    <a href="finance.html">2. Finance</a>
+    <a href="customer.html">3. Customer</a>
+    <a href="otip.html">4. OTIP</a>
+    <a href="plant.html">5. Plant</a>
+    <a href="quality.html">6. Quality</a>
+    <a href="supply.html">7. Supply</a>
+    <a href="oc-ipam.html" class="active">8. OC &amp; IPAM</a>
+  </nav>
+</header>
+<main>
+  <div class="page-hero">
+    <span class="icon">📋</span>
+    <div>
+      <h2>OC &amp; IPAM Control Board</h2>
+      <p>14 OC chi tiết · IPAM milestones · RAG tracking · Blockers — Owner: PMO + OC Owners</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-label">Tổng OC đang chạy</div>
+      <div class="kpi-value" id="total">14</div>
+      <div class="kpi-sub">Operational Campaigns</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">🟢 On Track</div>
+      <div class="kpi-value" id="cnt-g" style="color:#16a34a">—</div>
+      <div class="kpi-sub">đúng tiến độ</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">🟡 At Risk</div>
+      <div class="kpi-value" id="cnt-a" style="color:#f59e0b">—</div>
+      <div class="kpi-sub">cần theo dõi</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">🔴 Off Track</div>
+      <div class="kpi-value" id="cnt-r" style="color:#dc2626">—</div>
+      <div class="kpi-sub">cần escalation</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Escalation Queue</div>
+      <div class="kpi-value" id="esc">—</div>
+      <div class="kpi-sub">chờ CEO quyết định</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Waiting Decisions</div>
+      <div class="kpi-value" id="wait">—</div>
+      <div class="kpi-sub">tasks pending</div>
+    </div>
+  </div>
+
+  <div class="section-title">14 OC — Kanban Cards</div>
+  <div class="oc-grid" id="oc-cards">
+    <div style="grid-column:1/-1;text-align:center;padding:2rem;color:#6b7280;font-size:.85rem;">
+      Kết nối <code style="color:#3b82f6">python3 serve.py 8080</code> để load 14 OC thực từ DATA_LAYER
+    </div>
+  </div>
+
+  <div class="placeholder-box">
+    <div class="placeholder-icon">📊</div>
+    <div class="placeholder-title">IPAM Gantt &amp; Milestone Tracker</div>
+    <div class="placeholder-desc">
+      Hiển thị: 14 OC Gantt chart, IPAM milestone timeline, Blocker heatmap, Decision log, Phase completion progress.
+    </div>
+    <div class="placeholder-tags">
+      <span class="placeholder-tag">Gantt Chart</span>
+      <span class="placeholder-tag">IPAM Milestones</span>
+      <span class="placeholder-tag">Blocker Map</span>
+      <span class="placeholder-tag">Decision Log</span>
+    </div>
+    <div class="data-note">
+      Source: <code>DATA_LAYER/campaign/oc_status_data.json</code>
+      · Input: <code>GSBB_Biz_Contrl_Tower_Master_Action_Tracker_W19.xlsx</code>
+    </div>
+  </div>
+  <div class="meta">Source: PMO · OC Owners · Updated: <span id="ts">—</span></div>
+</main>
+<script>
+document.getElementById('ts').textContent = new Date().toLocaleString('vi-VN');
+
+async function tryLoad() {
+  try {
+    const oc = await fetch('/data/campaign/oc_status_data_sample.json', {cache:'no-store'}).then(r => r.json());
+    document.getElementById('cnt-g').textContent = oc.data.rag_count.green;
+    document.getElementById('cnt-a').textContent = oc.data.rag_count.amber;
+    document.getElementById('cnt-r').textContent = oc.data.rag_count.red;
+    document.getElementById('esc').textContent   = oc.data.escalation_queue_count;
+    document.getElementById('wait').textContent  = oc.data.waiting_decisions_count;
+
+    const grid = document.getElementById('oc-cards');
+    grid.innerHTML = oc.data.oc_list.map(o => {
+      const cls = o.status === 'green' ? 'green' : o.status === 'amber' ? 'amber' : 'red';
+      const pct = o.completion_pct ?? 0;
+      return `<div class="oc-mini ${cls}">
+        <div class="oc-id">${o.id} · ${o.truc||''}</div>
+        <div class="oc-name">${o.name}</div>
+        <div class="oc-meta">${o.phase||''} · Due: ${o.milestone_due||'—'}</div>
+        <div class="oc-pct-row">
+          <div class="oc-bar"><div class="oc-fill ${cls}" style="width:${pct}%"></div></div>
+          <span class="oc-pct-lbl">${pct}%</span>
+        </div>
+        <span class="oc-status ${cls}">${o.status.toUpperCase()}</span>
+        ${o.blocker ? `<div style="font-size:.7rem;color:#dc2626;margin-top:.3rem">⚠ ${o.blocker}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+tryLoad();
+</script>
+</body>
+</html>

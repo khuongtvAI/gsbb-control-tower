@@ -1,0 +1,18 @@
+{
+  "meta": { "extracted_at": "2026-05-17T08:00:00+07:00", "source": "QA Excel (sample, mapped from 20260506_QC_Du_Lieu_Loi_Thang11_2025.xlsx)", "period": "2025-11" },
+  "data": {
+    "fpy_pct": 92.4,
+    "defect_count": 1387,
+    "complaint_count": 23,
+    "top_defects": [
+      { "code": "DF-01", "name": "Lỗi in offset",         "count": 412, "cost_mn": 145.6 },
+      { "code": "DF-02", "name": "Lỗi cán màng",          "count": 287, "cost_mn": 98.2 },
+      { "code": "DF-03", "name": "Lỗi dán keo",           "count": 198, "cost_mn": 56.4 },
+      { "code": "DF-04", "name": "Lỗi đếm sai số lượng",  "count": 156, "cost_mn": 42.1 },
+      { "code": "DF-05", "name": "Lỗi đóng gói",          "count": 134, "cost_mn": 31.7 }
+    ],
+    "ncr_open": 18,
+    "capa_open": 12,
+    "capa_closure_rate_pct": 67.5
+  }
+}

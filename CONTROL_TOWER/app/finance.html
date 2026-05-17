@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Finance Control — GSBB Control Tower</title>
+<link rel="stylesheet" href="assets/ct-shared.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <a class="home-link" href="../../index.html">⬡ Hub</a>
+    <h1>GSBB Control Tower</h1>
+  </div>
+  <nav>
+    <a href="index.html">1. Executive</a>
+    <a href="finance.html" class="active">2. Finance</a>
+    <a href="customer.html">3. Customer</a>
+    <a href="otip.html">4. OTIP</a>
+    <a href="plant.html">5. Plant</a>
+    <a href="quality.html">6. Quality</a>
+    <a href="supply.html">7. Supply</a>
+    <a href="oc-ipam.html">8. OC &amp; IPAM</a>
+  </nav>
+</header>
+<main>
+  <div class="page-hero">
+    <span class="icon">💰</span>
+    <div>
+      <h2>Finance Control</h2>
+      <p>Doanh thu · Chi phí · EBITDA · Công nợ · Dòng tiền — Owner: CFO</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-label">Doanh thu T5/2026</div>
+      <div class="kpi-value" id="kpi-rev">—</div>
+      <div class="kpi-sub">tỷ VNĐ · vs KPI</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">EBITDA</div>
+      <div class="kpi-value" id="kpi-ebitda">—</div>
+      <div class="kpi-sub">tỷ VNĐ · margin%</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">COPQ</div>
+      <div class="kpi-value" id="kpi-copq">—</div>
+      <div class="kpi-sub">tỷ VNĐ</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Công nợ phải thu</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">tỷ VNĐ · DSO</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Chi phí vận hành</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">tỷ VNĐ vs budget</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Dòng tiền thuần</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">tỷ VNĐ tháng này</div>
+    </div>
+  </div>
+
+  <div class="placeholder-box">
+    <div class="placeholder-icon">📈</div>
+    <div class="placeholder-title">Finance Dashboard — Biểu đồ P&amp;L &amp; Cash Flow</div>
+    <div class="placeholder-desc">
+      Chart.js / Plotly sẽ hiển thị: Doanh thu theo tuần, Waterfall P&L, Cash flow forecast, AR/AP aging, Budget variance heatmap.
+    </div>
+    <div class="placeholder-tags">
+      <span class="placeholder-tag">Revenue Trend</span>
+      <span class="placeholder-tag">P&L Waterfall</span>
+      <span class="placeholder-tag">Cash Flow</span>
+      <span class="placeholder-tag">AR/AP Aging</span>
+      <span class="placeholder-tag">Budget vs Actual</span>
+    </div>
+    <div class="data-note">
+      Kết nối dữ liệu: <code>python3 serve.py 8080</code> tại thư mục <code>CONTROL_TOWER/</code>
+      · Source: <code>DATA_LAYER/finance/finance_data.json</code>
+    </div>
+  </div>
+
+  <div class="meta">Source: Bravo ERP · CFO team · Updated: <span id="ts">—</span></div>
+</main>
+<script>document.getElementById('ts').textContent = new Date().toLocaleString('vi-VN');</script>
+</body>
+</html>

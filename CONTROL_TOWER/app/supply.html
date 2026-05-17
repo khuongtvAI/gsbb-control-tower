@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Supply & Inventory — GSBB Control Tower</title>
+<link rel="stylesheet" href="assets/ct-shared.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <a class="home-link" href="../../index.html">⬡ Hub</a>
+    <h1>GSBB Control Tower</h1>
+  </div>
+  <nav>
+    <a href="index.html">1. Executive</a>
+    <a href="finance.html">2. Finance</a>
+    <a href="customer.html">3. Customer</a>
+    <a href="otip.html">4. OTIP</a>
+    <a href="plant.html">5. Plant</a>
+    <a href="quality.html">6. Quality</a>
+    <a href="supply.html" class="active">7. Supply</a>
+    <a href="oc-ipam.html">8. OC &amp; IPAM</a>
+  </nav>
+</header>
+<main>
+  <div class="page-hero">
+    <span class="icon">🔗</span>
+    <div>
+      <h2>Supply &amp; Inventory</h2>
+      <p>Tồn kho · DOS · Slow movers · Supplier KPIs · Procurement — Owner: SCM Lead</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card amber">
+      <div class="kpi-label">Tồn kho tổng</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">tỷ VNĐ · vs target</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">DOS (Days of Stock)</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">ngày · target 45</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Slow Movers</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">SKU tồn &gt;90 ngày</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Supplier On-time</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% giao đúng hạn</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Procurement Cycle</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">ngày trung bình</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Stockout Risk</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">SKU nguy cơ hết hàng</div>
+    </div>
+  </div>
+
+  <div class="placeholder-box">
+    <div class="placeholder-icon">📦</div>
+    <div class="placeholder-title">Supply &amp; Inventory Dashboard</div>
+    <div class="placeholder-desc">
+      Biểu đồ: Inventory by category (tỷ VNĐ), DOS trend, Slow mover matrix, Supplier scorecard, ABC analysis, Reorder point alerts.
+    </div>
+    <div class="placeholder-tags">
+      <span class="placeholder-tag">Inventory Breakdown</span>
+      <span class="placeholder-tag">DOS Trend</span>
+      <span class="placeholder-tag">Slow Mover Matrix</span>
+      <span class="placeholder-tag">Supplier Scorecard</span>
+      <span class="placeholder-tag">ABC Analysis</span>
+    </div>
+    <div class="data-note">
+      Source: <code>DATA_LAYER/production/supply_data.json</code>
+      · Input: Bravo ERP warehouse module
+    </div>
+  </div>
+  <div class="meta">Source: Bravo ERP · SCM Team · Updated: <span id="ts">—</span></div>
+</main>
+<script>document.getElementById('ts').textContent = new Date().toLocaleString('vi-VN');</script>
+</body>
+</html>

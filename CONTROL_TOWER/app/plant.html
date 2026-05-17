@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Plant & Value Stream — GSBB Control Tower</title>
+<link rel="stylesheet" href="assets/ct-shared.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <a class="home-link" href="../../index.html">⬡ Hub</a>
+    <h1>GSBB Control Tower</h1>
+  </div>
+  <nav>
+    <a href="index.html">1. Executive</a>
+    <a href="finance.html">2. Finance</a>
+    <a href="customer.html">3. Customer</a>
+    <a href="otip.html">4. OTIP</a>
+    <a href="plant.html" class="active">5. Plant</a>
+    <a href="quality.html">6. Quality</a>
+    <a href="supply.html">7. Supply</a>
+    <a href="oc-ipam.html">8. OC &amp; IPAM</a>
+  </nav>
+</header>
+<main>
+  <div class="page-hero">
+    <span class="icon">🏭</span>
+    <div>
+      <h2>Plant &amp; Value Stream</h2>
+      <p>OEE · Năng suất · Downtime · Capacity · Technology family — Owner: SX Lead</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-label">OEE Tổng</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% · target ≥ 80%</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Availability</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% máy sẵn sàng</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Performance</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% tốc độ thực tế</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Quality Rate</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% sản phẩm OK</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Downtime</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">giờ · tuần này</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Capacity Utilization</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% công suất thiết kế</div>
+    </div>
+  </div>
+
+  <div class="placeholder-box">
+    <div class="placeholder-icon">🏭</div>
+    <div class="placeholder-title">Plant Dashboard — OEE &amp; Value Stream Map</div>
+    <div class="placeholder-desc">
+      Biểu đồ: OEE breakdown (Availability · Performance · Quality), Downtime Pareto, Capacity heatmap theo dây chuyền, Technology family performance matrix.
+    </div>
+    <div class="placeholder-tags">
+      <span class="placeholder-tag">OEE Breakdown</span>
+      <span class="placeholder-tag">Downtime Pareto</span>
+      <span class="placeholder-tag">Capacity Heatmap</span>
+      <span class="placeholder-tag">Line Performance</span>
+      <span class="placeholder-tag">Tech Family</span>
+    </div>
+    <div class="data-note">
+      Source: <code>DATA_LAYER/production/plant_data.json</code>
+      · Input: MES real-time feed
+    </div>
+  </div>
+  <div class="meta">Source: MES · SX Team · Updated: <span id="ts">—</span></div>
+</main>
+<script>document.getElementById('ts').textContent = new Date().toLocaleString('vi-VN');</script>
+</body>
+</html>

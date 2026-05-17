@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>GSBB Control Tower — Executive Summary</title>
+<link rel="stylesheet" href="assets/ct-shared.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <a class="home-link" href="../../index.html">⬡ Hub</a>
+    <h1>GSBB Control Tower</h1>
+  </div>
+  <nav>
+    <a href="index.html" class="active">1. Executive</a>
+    <a href="finance.html">2. Finance</a>
+    <a href="customer.html">3. Customer</a>
+    <a href="otip.html">4. OTIP</a>
+    <a href="plant.html">5. Plant</a>
+    <a href="quality.html">6. Quality</a>
+    <a href="supply.html">7. Supply</a>
+    <a href="oc-ipam.html">8. OC &amp; IPAM</a>
+  </nav>
+</header>
+
+<main>
+  <section class="kpi-grid" id="kpi-summary">
+    <div class="kpi-card" data-rag="green">
+      <div class="kpi-label">Doanh thu T5/2026</div>
+      <div class="kpi-value" id="kpi-revenue">—</div>
+      <div class="kpi-unit">tỷ VNĐ</div>
+    </div>
+    <div class="kpi-card" data-rag="amber">
+      <div class="kpi-label">EBITDA</div>
+      <div class="kpi-value" id="kpi-ebitda">—</div>
+      <div class="kpi-unit">tỷ VNĐ</div>
+    </div>
+    <div class="kpi-card" data-rag="red">
+      <div class="kpi-label">COPQ</div>
+      <div class="kpi-value" id="kpi-copq">—</div>
+      <div class="kpi-unit">tỷ VNĐ</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">14 OC Status</div>
+      <div class="kpi-value">
+        <span class="dot red"></span><span id="oc-red">0</span>
+        <span class="dot amber"></span><span id="oc-amber">0</span>
+        <span class="dot green"></span><span id="oc-green">0</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Escalation Queue</div>
+      <div class="kpi-value" id="kpi-esc">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Waiting Decisions</div>
+      <div class="kpi-value" id="kpi-wait">—</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>14 OC — Snapshot</h2>
+    <table class="oc-table">
+      <thead><tr><th>ID</th><th>Tên OC</th><th>Trục</th><th>Phase</th><th>Status</th><th>%</th><th>Next milestone</th><th>Blocker</th></tr></thead>
+      <tbody id="oc-rows"></tbody>
+    </table>
+  </section>
+
+  <footer class="meta">
+    <span>Source: <span id="meta-source">—</span></span> ·
+    <span>Updated: <span id="meta-time">—</span></span>
+  </footer>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "meta": { "extracted_at": "2026-05-17T08:00:00+07:00", "source": "PMO IPAM log (sample)", "period": "2026-W20" },
+  "data": {
+    "entries": [
+      { "id": "IPAM-W20-001", "date": "2026-05-13", "from_oc": "OC-03", "issue": "Xunyue trễ tích hợp line A 3 tuần", "owner": "Digital/IT Lead",          "action": "Họp với vendor T6 để chốt timeline", "mitigation": "Manual log tạm thời 2 tuần", "status": "open",   "deadline": "2026-05-20" },
+      { "id": "IPAM-W20-002", "date": "2026-05-13", "from_oc": "OC-06", "issue": "Định nghĩa COPQ chưa thống nhất",   "owner": "CFO + QA Lead",            "action": "Workshop 2h chốt definition",        "mitigation": "Dùng định nghĩa QA tạm thời",  "status": "open",   "deadline": "2026-05-18" },
+      { "id": "IPAM-W20-003", "date": "2026-05-14", "from_oc": "OC-02", "issue": "Thiếu data CRM lịch sử 12 tháng",   "owner": "Sales Lead + Data Lead",   "action": "Pull data từ Cogover export",        "mitigation": "—",                            "status": "open",   "deadline": "2026-05-22" },
+      { "id": "IPAM-W20-004", "date": "2026-05-15", "from_oc": "OC-07", "issue": "CEO chưa duyệt list top 15 KH",     "owner": "PMO escalate CEO",         "action": "Đưa vào agenda họp thứ 2",           "mitigation": "Dùng list draft tạm thời",     "status": "open",   "deadline": "2026-05-20" },
+      { "id": "IPAM-W20-005", "date": "2026-05-16", "from_oc": "OC-05", "issue": "SOP QA-001 chờ pháp chế review",    "owner": "QA Lead + Legal",          "action": "Submit draft v2 T2",                 "mitigation": "—",                            "status": "closed", "deadline": "2026-05-16" }
+    ]
+  }
+}

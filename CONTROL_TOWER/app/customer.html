@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Customer & Market — GSBB Control Tower</title>
+<link rel="stylesheet" href="assets/ct-shared.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <a class="home-link" href="../../index.html">⬡ Hub</a>
+    <h1>GSBB Control Tower</h1>
+  </div>
+  <nav>
+    <a href="index.html">1. Executive</a>
+    <a href="finance.html">2. Finance</a>
+    <a href="customer.html" class="active">3. Customer</a>
+    <a href="otip.html">4. OTIP</a>
+    <a href="plant.html">5. Plant</a>
+    <a href="quality.html">6. Quality</a>
+    <a href="supply.html">7. Supply</a>
+    <a href="oc-ipam.html">8. OC &amp; IPAM</a>
+  </nav>
+</header>
+<main>
+  <div class="page-hero">
+    <span class="icon">👥</span>
+    <div>
+      <h2>Customer &amp; Market Control</h2>
+      <p>Top 15 KH chiến lược · Win/Loss · Pipeline · Market share — Owner: Sales Lead</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-label">Doanh thu Top 15 KH</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">tỷ VNĐ · % tổng DT</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Win Rate</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% vs tháng trước</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Pipeline</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">tỷ VNĐ · qualified</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Churn Risk</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">KH cần chú ý</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">New Customer</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">KH mới T5/2026</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Market Share</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% theo kênh chủ lực</div>
+    </div>
+  </div>
+
+  <div class="placeholder-box">
+    <div class="placeholder-icon">🗺️</div>
+    <div class="placeholder-title">Customer Portfolio Map &amp; Sales Funnel</div>
+    <div class="placeholder-desc">
+      Hiển thị: Top 15 KH bubble chart (doanh thu vs tăng trưởng), Sales funnel, Win/Loss phân tích, Heatmap kênh phân phối, Customer health score.
+    </div>
+    <div class="placeholder-tags">
+      <span class="placeholder-tag">Top 15 KH</span>
+      <span class="placeholder-tag">Win/Loss Analysis</span>
+      <span class="placeholder-tag">Sales Funnel</span>
+      <span class="placeholder-tag">Channel Heatmap</span>
+      <span class="placeholder-tag">Health Score</span>
+    </div>
+    <div class="data-note">
+      Source: <code>DATA_LAYER/customer/customer_data.json</code>
+      · Input: <code>20260516_Sale_DulieuKinhDoanhTinhDenT4.xlsx</code>
+    </div>
+  </div>
+  <div class="meta">Source: Sales CRM · Bravo ERP · Updated: <span id="ts">—</span></div>
+</main>
+<script>document.getElementById('ts').textContent = new Date().toLocaleString('vi-VN');</script>
+</body>
+</html>

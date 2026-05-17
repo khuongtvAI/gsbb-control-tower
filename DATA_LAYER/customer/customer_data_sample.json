@@ -1,0 +1,19 @@
+{
+  "meta": { "extracted_at": "2026-05-17T08:00:00+07:00", "source": "Sales ERP_Data (sample, mapped from 20260516_Sale_DulieuKinhDoanhTinhDenT4.xlsx)", "period": "2026-Q1" },
+  "data": {
+    "win_rate_pct": 32.5,
+    "pipeline_total_bn": 412.8,
+    "top_customers": [
+      { "name": "Samsung",     "industry": "Electronics", "revenue_ytd_bn": 88.4, "margin_pct": 16.2, "status": "protect", "salesperson": "Lan" },
+      { "name": "Unilever",    "industry": "FMCG",        "revenue_ytd_bn": 65.1, "margin_pct": 19.5, "status": "grow",    "salesperson": "Huy" },
+      { "name": "Vinamilk",    "industry": "FMCG",        "revenue_ytd_bn": 42.3, "margin_pct": 17.8, "status": "grow",    "salesperson": "Lan" },
+      { "name": "Masan",       "industry": "FMCG",        "revenue_ytd_bn": 31.6, "margin_pct": 14.1, "status": "fix",     "salesperson": "Huy" },
+      { "name": "Acecook",     "industry": "FMCG",        "revenue_ytd_bn": 22.8, "margin_pct": 21.3, "status": "protect", "salesperson": "Lan" },
+      { "name": "Nestlé",      "industry": "FMCG",        "revenue_ytd_bn": 19.4, "margin_pct": 18.7, "status": "grow",    "salesperson": "Huy" },
+      { "name": "LG",          "industry": "Electronics", "revenue_ytd_bn": 14.2, "margin_pct": 15.5, "status": "price-up","salesperson": "Lan" }
+    ],
+    "churn_list": [
+      { "name": "Khách hàng X", "industry": "Electronics", "last_order": "2026-03-15", "reason": "Chuyển đối tác Trung Quốc" }
+    ]
+  }
+}

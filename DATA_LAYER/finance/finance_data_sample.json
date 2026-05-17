@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "extracted_at": "2026-05-17T08:00:00+07:00",
+    "source": "Bravo (sample)",
+    "period": "2026-05"
+  },
+  "data": {
+    "revenue_bn": 245.6,
+    "gross_margin_pct": 18.3,
+    "ebitda_bn": 22.1,
+    "copq_bn": 8.7,
+    "cash_position_bn": 45.0,
+    "ar_overdue_bn": 12.3,
+    "ap_due_bn": 18.9,
+    "inventory_value_bn": 88.5,
+    "rag": {
+      "revenue": "green",
+      "ebitda": "amber",
+      "copq": "red",
+      "cash_position": "green",
+      "ar_overdue": "amber"
+    }
+  }
+}

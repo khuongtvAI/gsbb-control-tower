@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Campaign / OC Status Data",
+  "type": "object",
+  "required": ["meta", "data"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["extracted_at", "source", "week_label"],
+      "properties": {
+        "extracted_at": { "type": "string", "format": "date-time" },
+        "source": { "type": "string", "examples": ["PMO Master Action Tracker"] },
+        "week_label": { "type": "string", "examples": ["2026-W20"] }
+      }
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "overall_status": { "enum": ["red", "amber", "green"] },
+        "total_oc": { "type": "integer" },
+        "rag_count": {
+          "type": "object",
+          "properties": {
+            "red":   { "type": "integer" },
+            "amber": { "type": "integer" },
+            "green": { "type": "integer" }
+          }
+        },
+        "oc_list": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "owner", "status"],
+            "properties": {
+              "id": { "type": "string", "examples": ["OC-01"] },
+              "name": { "type": "string" },
+              "owner": { "type": "string" },
+              "co_owner": { "type": "string" },
+              "truc": { "enum": ["BU", "BO", "BG"] },
+              "phase": { "enum": ["Discovery", "Design", "Pilot", "Scale"] },
+              "status": { "enum": ["red", "amber", "green"] },
+              "completion_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+              "next_milestone": { "type": "string" },
+              "milestone_due": { "type": "string", "format": "date" },
+              "blocker": { "type": "string" }
+            }
+          }
+        },
+        "escalation_queue_count": { "type": "integer" },
+        "waiting_decisions_count": { "type": "integer" }
+      }
+    }
+  }
+}

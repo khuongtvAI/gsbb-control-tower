@@ -1,0 +1,17 @@
+{
+  "meta": { "extracted_at": "2026-05-17T08:00:00+07:00", "source": "MES (sample placeholder)", "period": "2026-05" },
+  "data": {
+    "overall_oee_pct": 71.2,
+    "availability_pct": 84.5,
+    "performance_pct": 88.3,
+    "quality_pct": 95.4,
+    "completion_pct": 92.1,
+    "by_machine": [
+      { "machine_id": "M-01", "line": "L1", "family": "Offset",  "oee_pct": 78.2, "output_units": 45000, "downtime_hours": 12.5 },
+      { "machine_id": "M-02", "line": "L1", "family": "Offset",  "oee_pct": 65.4, "output_units": 38000, "downtime_hours": 28.0 },
+      { "machine_id": "M-03", "line": "L2", "family": "Flexo",   "oee_pct": 72.1, "output_units": 52000, "downtime_hours": 18.3 },
+      { "machine_id": "M-04", "line": "L2", "family": "Flexo",   "oee_pct": 81.0, "output_units": 61000, "downtime_hours": 9.7 },
+      { "machine_id": "M-05", "line": "L3", "family": "Lamination", "oee_pct": 59.8, "output_units": 22000, "downtime_hours": 35.2 }
+    ]
+  }
+}

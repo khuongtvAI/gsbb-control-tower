@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>OTIP — GSBB Control Tower</title>
+<link rel="stylesheet" href="assets/ct-shared.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <a class="home-link" href="../../index.html">⬡ Hub</a>
+    <h1>GSBB Control Tower</h1>
+  </div>
+  <nav>
+    <a href="index.html">1. Executive</a>
+    <a href="finance.html">2. Finance</a>
+    <a href="customer.html">3. Customer</a>
+    <a href="otip.html" class="active">4. OTIP</a>
+    <a href="plant.html">5. Plant</a>
+    <a href="quality.html">6. Quality</a>
+    <a href="supply.html">7. Supply</a>
+    <a href="oc-ipam.html">8. OC &amp; IPAM</a>
+  </nav>
+</header>
+<main>
+  <div class="page-hero">
+    <span class="icon">📦</span>
+    <div>
+      <h2>OTIP — On Time In Full</h2>
+      <p>Tỷ lệ giao đúng hạn · Fill rate · Backlog · KHSX vs thực tế — Owner: Sales + KHSX</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-label">OTIF Rate</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% · target ≥ 95%</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Fill Rate</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% đơn hoàn thành đủ</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Backlog</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">đơn hàng tồn đọng</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">KHSX vs Thực tế</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% adherence</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Lead Time TB</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">ngày · vs target</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">On-time Delivery</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% đúng ngày cam kết</div>
+    </div>
+  </div>
+
+  <div class="placeholder-box">
+    <div class="placeholder-icon">⏱️</div>
+    <div class="placeholder-title">OTIP Dashboard — Delivery Performance &amp; Backlog</div>
+    <div class="placeholder-desc">
+      Biểu đồ: OTIF trend theo tuần, Fill rate by product family, Backlog aging, KHSX adherence heatmap, Lead time distribution.
+    </div>
+    <div class="placeholder-tags">
+      <span class="placeholder-tag">OTIF Trend</span>
+      <span class="placeholder-tag">Fill Rate</span>
+      <span class="placeholder-tag">Backlog Aging</span>
+      <span class="placeholder-tag">KHSX Adherence</span>
+      <span class="placeholder-tag">Lead Time</span>
+    </div>
+    <div class="data-note">
+      Source: <code>DATA_LAYER/production/otip_data.json</code>
+      · Input: MES + Bravo ERP đơn hàng
+    </div>
+  </div>
+  <div class="meta">Source: MES · Bravo ERP · Updated: <span id="ts">—</span></div>
+</main>
+<script>document.getElementById('ts').textContent = new Date().toLocaleString('vi-VN');</script>
+</body>
+</html>

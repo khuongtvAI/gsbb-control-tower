@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Customer Data",
+  "type": "object",
+  "required": ["meta", "data"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["extracted_at", "source", "period"],
+      "properties": {
+        "extracted_at": { "type": "string", "format": "date-time" },
+        "source": { "type": "string" },
+        "period": { "type": "string" }
+      }
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "top_customers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "industry", "revenue_ytd_bn"],
+            "properties": {
+              "name": { "type": "string" },
+              "industry": { "type": "string" },
+              "revenue_ytd_bn": { "type": "number" },
+              "margin_pct": { "type": "number" },
+              "status": { "enum": ["protect", "grow", "fix", "price-up", "exit"] },
+              "salesperson": { "type": "string" }
+            }
+          }
+        },
+        "churn_list": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "win_rate_pct": { "type": "number" },
+        "pipeline_total_bn": { "type": "number" }
+      }
+    }
+  }
+}

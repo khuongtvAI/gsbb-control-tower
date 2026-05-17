@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSBB Digital Command Center</title>
+<style>
+/* ── RESET & BASE ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #071E0F;
+  --bg2:      #0D3B1E;
+  --bg3:      #0F4A25;
+  --accent:   #16a34a;
+  --accent2:  #4ade80;
+  --green:    #16a34a;
+  --amber:    #f59e0b;
+  --red:      #dc2626;
+  --text:     #e2f0e8;
+  --muted:    #86a896;
+  --border:   #1a4a2a;
+  --sidebar:  240px;
+}
+body {
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR ──────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar);
+  background: #040E08;
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 100;
+}
+.sidebar-brand {
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-brand .logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: 0.05em;
+}
+.sidebar-brand .sub {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.sidebar-section {
+  padding: 0.75rem 0 0.25rem;
+}
+.sidebar-section-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  padding: 0 1rem 0.4rem;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.sidebar-link:hover  { background: var(--bg2); color: var(--text); }
+.sidebar-link.active { border-left-color: var(--accent); background: var(--bg2); color: var(--accent2); }
+.sidebar-link .icon  { width: 16px; text-align: center; font-size: 0.85rem; flex-shrink: 0; }
+.rag-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.rag-dot.green  { background: var(--green);  box-shadow: 0 0 4px var(--green); }
+.rag-dot.amber  { background: var(--amber);  box-shadow: 0 0 4px var(--amber); }
+.rag-dot.red    { background: var(--red);    box-shadow: 0 0 4px var(--red); }
+.sidebar-footer {
+  margin-top: auto;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* ── MAIN ─────────────────────────────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ───────────────────────────────────────────────────────── */
+.topbar {
+  background: #040E08;
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.topbar-title {
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 600;
+}
+.topbar-meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.status-badge {
+  background: #14532d;
+  color: #4ade80;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ── CONTENT ──────────────────────────────────────────────────────── */
+.content {
+  padding: 1.75rem 2rem;
+  max-width: 1280px;
+}
+
+/* ── HERO ─────────────────────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #0f3d20 0%, #071E0F 60%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem 2rem;
+  margin-bottom: 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: var(--accent);
+}
+.hero-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.25rem;
+}
+.hero-sub {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+.hero-tags {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.hero-tag {
+  background: rgba(22,163,74,0.15);
+  border: 1px solid rgba(22,163,74,0.35);
+  color: var(--accent2);
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ── KPI STRIP ────────────────────────────────────────────────────── */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.875rem;
+  margin-bottom: 1.75rem;
+}
+.kpi-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  border-left: 4px solid var(--border);
+  cursor: default;
+}
+.kpi-card.green { border-left-color: var(--green); }
+.kpi-card.amber { border-left-color: var(--amber); }
+.kpi-card.red   { border-left-color: var(--red);   }
+.kpi-card.blue  { border-left-color: var(--accent); }
+.kpi-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.3rem; }
+.kpi-value { font-size: 1.7rem; font-weight: 700; line-height: 1; }
+.kpi-value.green { color: #4ade80; }
+.kpi-value.amber { color: #fbbf24; }
+.kpi-value.red   { color: #f87171; }
+.kpi-value.blue  { color: var(--accent2); }
+.kpi-sub   { font-size: 0.7rem; color: var(--muted); margin-top: 0.25rem; }
+
+/* ── SECTION HEADER ───────────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.section-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── SITE GRID ────────────────────────────────────────────────────── */
+.site-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 0.875rem;
+  margin-bottom: 2rem;
+}
+.site-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.1rem 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  border-top: 3px solid transparent;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.site-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+.site-card.ct  { border-top-color: #4ade80; }
+.site-card.wr  { border-top-color: #a3e635; }
+.site-card.tmpl{ border-top-color: var(--amber); }
+.site-card.ext { border-top-color: #34d399; }
+
+.card-icon-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-icon { font-size: 1.5rem; }
+.card-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+.card-badge.ct   { background: rgba(22,163,74,0.15);  color: var(--accent2); }
+.card-badge.wr   { background: rgba(74,222,128,0.12); color: #86efac; }
+.card-badge.tmpl { background: rgba(245,158,11,0.15); color: #fcd34d; }
+.card-badge.live { background: rgba(22,163,74,0.15);  color: #4ade80; }
+.card-badge.pdf  { background: rgba(239,68,68,0.12);  color: #fca5a5; }
+
+.card-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 0.2rem;
+}
+.card-desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+.card-tag {
+  font-size: 0.63rem;
+  background: var(--bg3);
+  color: var(--muted);
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+.card-arrow {
+  position: absolute;
+  bottom: 0.9rem;
+  right: 1rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  opacity: 0.5;
+  transition: opacity 0.15s, right 0.15s;
+}
+.site-card:hover .card-arrow { opacity: 1; right: 0.75rem; }
+
+/* ── OC TABLE ─────────────────────────────────────────────────────── */
+.oc-section { margin-bottom: 2rem; }
+table.oc-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg2);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.oc-table th {
+  background: var(--bg3);
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 0.6rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.oc-table td { padding: 0.5rem 0.9rem; border-bottom: 1px solid #1e293b; color: var(--text); }
+.oc-table tr:last-child td { border-bottom: none; }
+.oc-table tr:hover td { background: rgba(255,255,255,0.025); }
+.rag { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; font-size: 0.75rem; }
+.rag.green { color: #4ade80; }
+.rag.amber { color: #fbbf24; }
+.rag.red   { color: #f87171; }
+.rag::before {
+  content: '●';
+  font-size: 0.6rem;
+}
+.pct-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+.pct-bar { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; min-width: 50px; }
+.pct-fill { height: 100%; border-radius: 3px; }
+.pct-fill.green { background: var(--green); }
+.pct-fill.amber { background: var(--amber); }
+.pct-fill.red   { background: var(--red); }
+.pct-label { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+
+/* ── FOOTER ───────────────────────────────────────────────────────── */
+.page-footer {
+  margin-top: auto;
+  padding: 1rem 2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.7rem;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">⬡ GSBB</div>
+    <div class="sub">Digital Command Center</div>
+  </div>
+
+  <nav>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Overview</div>
+      <a class="sidebar-link active" href="index.html">
+        <span class="icon">🏠</span> Main Hub
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Control Tower</div>
+      <a class="sidebar-link" href="CONTROL_TOWER/app/index.html">
+        <span class="icon">📊</span> Executive Summary
+        <span class="rag-dot green"></span>
+      </a>
+      <a class="sidebar-link" href="CONTROL_TOWER/app/finance.html">
+        <span class="icon">💰</span> Finance
+        <span class="rag-dot amber"></span>
+      </a>
+      <a class="sidebar-link" href="CONTROL_TOWER/app/customer.html">
+        <span class="icon">👥</span> Customer &amp; Market
+        <span class="rag-dot green"></span>
+      </a>
+      <a class="sidebar-link" href="CONTROL_TOWER/app/otip.html">
+        <span class="icon">📦</span> OTIP
+        <span class="rag-dot amber"></span>
+      </a>
+      <a class="sidebar-link" href="CONTROL_TOWER/app/plant.html">
+        <span class="icon">🏭</span> Plant &amp; Value Stream
+        <span class="rag-dot green"></span>
+      </a>
+      <a class="sidebar-link" href="CONTROL_TOWER/app/quality.html">
+        <span class="icon">🎯</span> Quality &amp; COPQ
+        <span class="rag-dot red"></span>
+      </a>
+      <a class="sidebar-link" href="CONTROL_TOWER/app/supply.html">
+        <span class="icon">🔗</span> Supply &amp; Inventory
+        <span class="rag-dot amber"></span>
+      </a>
+      <a class="sidebar-link" href="CONTROL_TOWER/app/oc-ipam.html">
+        <span class="icon">📋</span> OC &amp; IPAM Board
+        <span class="rag-dot amber"></span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">War Room</div>
+      <a class="sidebar-link" href="WAR_ROOM/app/index.html">
+        <span class="icon">⚔️</span> War Room Hub
+      </a>
+      <a class="sidebar-link" href="WAR_ROOM/app/campaign-portfolio.html">
+        <span class="icon">🎯</span> Campaign Portfolio
+      </a>
+      <a class="sidebar-link" href="WAR_ROOM/app/customer-portfolio.html">
+        <span class="icon">👤</span> Customer Portfolio
+      </a>
+      <a class="sidebar-link" href="WAR_ROOM/app/plant-family.html">
+        <span class="icon">🔧</span> Plant / Family
+      </a>
+      <a class="sidebar-link" href="WAR_ROOM/app/issue-loss.html">
+        <span class="icon">🔥</span> Issue / Loss Hotspot
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Templates PDF</div>
+      <a class="sidebar-link" href="templates/Executive Summary - GSBB Control Tower.pdf" target="_blank">
+        <span class="icon">📄</span> Executive Summary
+      </a>
+      <a class="sidebar-link" href="templates/Customer &amp; Market Control - GSBB Control Tower.pdf" target="_blank">
+        <span class="icon">📄</span> Customer &amp; Market
+      </a>
+      <a class="sidebar-link" href="templates/Plant &amp; Value Stream - GSBB Control Tower.pdf" target="_blank">
+        <span class="icon">📄</span> Plant &amp; Value Stream
+      </a>
+      <a class="sidebar-link" href="templates/Quality &amp; COPQ - GSBB Control Tower.pdf" target="_blank">
+        <span class="icon">📄</span> Quality &amp; COPQ
+      </a>
+      <a class="sidebar-link" href="templates/Supply &amp; Inventory - GSBB Control Tower.pdf" target="_blank">
+        <span class="icon">📄</span> Supply &amp; Inventory
+      </a>
+      <a class="sidebar-link" href="templates/OC &amp; IPAM Control Board - GSBB Control Tower.pdf" target="_blank">
+        <span class="icon">📄</span> OC &amp; IPAM Board
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    GSBB Control Tower v1.0<br>
+    <span id="sb-time"></span>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">GSBB Digital Command Center — Main Hub</div>
+    <div class="topbar-meta">
+      <span class="status-badge">● LIVE</span>
+      <span id="top-time"></span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-title">GSBB Control Tower &amp; War Room</div>
+      <div class="hero-sub">Phòng Điều hành Số — Dữ liệu thực · Quyết định nhanh · Giao việc tự động</div>
+      <div class="hero-tags">
+        <span class="hero-tag">📊 8 Dashboard</span>
+        <span class="hero-tag">⚔️ 4 War Room</span>
+        <span class="hero-tag">🤖 Claude AI</span>
+        <span class="hero-tag">⚡ Real-time Data</span>
+        <span class="hero-tag">📡 Telegram Alerts</span>
+        <span class="hero-tag">📋 14 OC Tracker</span>
+      </div>
+    </div>
+
+    <!-- KPI STRIP -->
+    <div class="kpi-strip">
+      <div class="kpi-card green">
+        <div class="kpi-label">Doanh thu T5/2026</div>
+        <div class="kpi-value green">—</div>
+        <div class="kpi-sub">tỷ VNĐ · vs KPI</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">EBITDA</div>
+        <div class="kpi-value amber">—</div>
+        <div class="kpi-sub">tỷ VNĐ · margin%</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">COPQ</div>
+        <div class="kpi-value red">—</div>
+        <div class="kpi-sub">tỷ VNĐ · chi phí lỗi</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-label">14 OC Status</div>
+        <div class="kpi-value blue" id="oc-summary">— / —</div>
+        <div class="kpi-sub">
+          <span style="color:#4ade80">●<span id="oc-g">0</span></span>
+          <span style="color:#fbbf24;margin-left:.4rem">●<span id="oc-a">0</span></span>
+          <span style="color:#f87171;margin-left:.4rem">●<span id="oc-r">0</span></span>
+        </div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">Escalation Queue</div>
+        <div class="kpi-value amber">—</div>
+        <div class="kpi-sub">chờ quyết định</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">Waiting Decisions</div>
+        <div class="kpi-value red">—</div>
+        <div class="kpi-sub">tasks pending</div>
+      </div>
+    </div>
+
+    <!-- CONTROL TOWER -->
+    <div class="section-header">
+      <span class="section-title">🗼 Control Tower</span>
+      <span class="section-count">8 dashboard · operational</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="site-grid">
+      <a class="site-card ct" href="CONTROL_TOWER/app/index.html">
+        <div class="card-icon-row">
+          <span class="card-icon">📊</span>
+          <span class="card-badge ct">Executive</span>
+        </div>
+        <div class="card-name">Executive Summary</div>
+        <div class="card-desc">Tổng quan KPI toàn công ty · 14 OC snapshot · Escalation queue · Waiting decisions</div>
+        <div class="card-tags">
+          <span class="card-tag">Revenue</span><span class="card-tag">EBITDA</span>
+          <span class="card-tag">COPQ</span><span class="card-tag">14 OC</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card ct" href="CONTROL_TOWER/app/finance.html">
+        <div class="card-icon-row">
+          <span class="card-icon">💰</span>
+          <span class="card-badge ct">Finance</span>
+        </div>
+        <div class="card-name">Finance Control</div>
+        <div class="card-desc">Doanh thu · Chi phí · EBITDA · Công nợ · Dòng tiền theo tuần/tháng</div>
+        <div class="card-tags">
+          <span class="card-tag">P&L</span><span class="card-tag">Cash Flow</span>
+          <span class="card-tag">AR/AP</span><span class="card-tag">Budget</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card ct" href="CONTROL_TOWER/app/customer.html">
+        <div class="card-icon-row">
+          <span class="card-icon">👥</span>
+          <span class="card-badge ct">Customer</span>
+        </div>
+        <div class="card-name">Customer &amp; Market Control</div>
+        <div class="card-desc">Top 15 KH chiến lược · Win/Loss · Pipeline · Market share theo kênh</div>
+        <div class="card-tags">
+          <span class="card-tag">Sales</span><span class="card-tag">Win/Loss</span>
+          <span class="card-tag">Pipeline</span><span class="card-tag">CRM</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card ct" href="CONTROL_TOWER/app/otip.html">
+        <div class="card-icon-row">
+          <span class="card-icon">📦</span>
+          <span class="card-badge ct">OTIP</span>
+        </div>
+        <div class="card-name">OTIP — On Time In Full</div>
+        <div class="card-desc">Tỷ lệ giao hàng đúng hạn · Fill rate · Backlog · Kế hoạch sản xuất vs thực tế</div>
+        <div class="card-tags">
+          <span class="card-tag">OTIF</span><span class="card-tag">Fill Rate</span>
+          <span class="card-tag">Backlog</span><span class="card-tag">KHSX</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card ct" href="CONTROL_TOWER/app/plant.html">
+        <div class="card-icon-row">
+          <span class="card-icon">🏭</span>
+          <span class="card-badge ct">Plant</span>
+        </div>
+        <div class="card-name">Plant &amp; Value Stream</div>
+        <div class="card-desc">OEE · Năng suất theo dây chuyền · Downtime · Technology family performance</div>
+        <div class="card-tags">
+          <span class="card-tag">OEE</span><span class="card-tag">Capacity</span>
+          <span class="card-tag">Downtime</span><span class="card-tag">MES</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card ct" href="CONTROL_TOWER/app/quality.html">
+        <div class="card-icon-row">
+          <span class="card-icon">🎯</span>
+          <span class="card-badge ct">Quality</span>
+        </div>
+        <div class="card-name">Quality &amp; COPQ</div>
+        <div class="card-desc">Tỷ lệ lỗi · COPQ theo danh mục · Top defects · Customer complaints · Scrap rate</div>
+        <div class="card-tags">
+          <span class="card-tag">Defect Rate</span><span class="card-tag">COPQ</span>
+          <span class="card-tag">Complaint</span><span class="card-tag">Scrap</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card ct" href="CONTROL_TOWER/app/supply.html">
+        <div class="card-icon-row">
+          <span class="card-icon">🔗</span>
+          <span class="card-badge ct">Supply</span>
+        </div>
+        <div class="card-name">Supply &amp; Inventory</div>
+        <div class="card-desc">Tồn kho theo nhóm · DOS · Slow movers · Nhà cung cấp KPIs · Procurement cycle</div>
+        <div class="card-tags">
+          <span class="card-tag">Inventory</span><span class="card-tag">DOS</span>
+          <span class="card-tag">Supplier</span><span class="card-tag">SCM</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card ct" href="CONTROL_TOWER/app/oc-ipam.html">
+        <div class="card-icon-row">
+          <span class="card-icon">📋</span>
+          <span class="card-badge ct">OC &amp; IPAM</span>
+        </div>
+        <div class="card-name">OC &amp; IPAM Control Board</div>
+        <div class="card-desc">14 OC chi tiết · IPAM milestones · RAG tracking · Blockers · Decision log</div>
+        <div class="card-tags">
+          <span class="card-tag">14 OC</span><span class="card-tag">IPAM</span>
+          <span class="card-tag">Milestones</span><span class="card-tag">RAG</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+    </div>
+
+    <!-- WAR ROOM -->
+    <div class="section-header">
+      <span class="section-title">⚔️ War Room</span>
+      <span class="section-count">4 phòng chiến lược · decision making</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="site-grid">
+      <a class="site-card wr" href="WAR_ROOM/app/index.html">
+        <div class="card-icon-row">
+          <span class="card-icon">🏛️</span>
+          <span class="card-badge wr">Hub</span>
+        </div>
+        <div class="card-name">War Room Hub</div>
+        <div class="card-desc">Tổng quan 4 phòng chiến lược · Lựa chọn room theo agenda tuần</div>
+        <div class="card-tags">
+          <span class="card-tag">Strategic</span><span class="card-tag">Weekly</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card wr" href="WAR_ROOM/app/campaign-portfolio.html">
+        <div class="card-icon-row">
+          <span class="card-icon">🚀</span>
+          <span class="card-badge wr">Campaign</span>
+        </div>
+        <div class="card-name">Campaign Portfolio</div>
+        <div class="card-desc">Phân loại 14 OC: Accelerate · Support · Watch · Reset · Close</div>
+        <div class="card-tags">
+          <span class="card-tag">Accelerate</span><span class="card-tag">Watch</span>
+          <span class="card-tag">Reset</span><span class="card-tag">Close</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card wr" href="WAR_ROOM/app/customer-portfolio.html">
+        <div class="card-icon-row">
+          <span class="card-icon">🤝</span>
+          <span class="card-badge wr">Customer</span>
+        </div>
+        <div class="card-name">Customer Portfolio</div>
+        <div class="card-desc">Quyết định top 15 KH: Protect · Grow · Fix · Price-up · Exit</div>
+        <div class="card-tags">
+          <span class="card-tag">Protect</span><span class="card-tag">Grow</span>
+          <span class="card-tag">Exit</span><span class="card-tag">Price-up</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card wr" href="WAR_ROOM/app/plant-family.html">
+        <div class="card-icon-row">
+          <span class="card-icon">⚙️</span>
+          <span class="card-badge wr">Plant</span>
+        </div>
+        <div class="card-name">Plant / Technology Family</div>
+        <div class="card-desc">Đầu tư · ổn định · phase out từng dây chuyền/family sản phẩm</div>
+        <div class="card-tags">
+          <span class="card-tag">Invest</span><span class="card-tag">Stabilize</span>
+          <span class="card-tag">Phase out</span><span class="card-tag">Pilot AI</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <a class="site-card wr" href="WAR_ROOM/app/issue-loss.html">
+        <div class="card-icon-row">
+          <span class="card-icon">🔥</span>
+          <span class="card-badge wr">Issues</span>
+        </div>
+        <div class="card-name">Issue / Loss Hotspot</div>
+        <div class="card-desc">Top issues tuần: Fix now · Root-cause · Monitor · SOP needed · Escalate</div>
+        <div class="card-tags">
+          <span class="card-tag">Fix now</span><span class="card-tag">Root-cause</span>
+          <span class="card-tag">Escalate</span><span class="card-tag">SOP</span>
+        </div>
+        <span class="card-arrow">→</span>
+      </a>
+    </div>
+
+    <!-- TEMPLATES PDF -->
+    <div class="section-header">
+      <span class="section-title">📄 Template PDF</span>
+      <span class="section-count">6 bản thiết kế gốc</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="site-grid">
+      <a class="site-card tmpl" href="templates/Executive Summary - GSBB Control Tower.pdf" target="_blank">
+        <div class="card-icon-row">
+          <span class="card-icon">📑</span>
+          <span class="card-badge pdf">PDF</span>
+        </div>
+        <div class="card-name">Executive Summary</div>
+        <div class="card-desc">Template gốc — bản thiết kế Executive Summary dashboard</div>
+        <span class="card-arrow">↗</span>
+      </a>
+      <a class="site-card tmpl" href="templates/Customer &amp; Market Control - GSBB Control Tower.pdf" target="_blank">
+        <div class="card-icon-row">
+          <span class="card-icon">📑</span>
+          <span class="card-badge pdf">PDF</span>
+        </div>
+        <div class="card-name">Customer &amp; Market Control</div>
+        <div class="card-desc">Template gốc — thiết kế trang Customer &amp; Market</div>
+        <span class="card-arrow">↗</span>
+      </a>
+      <a class="site-card tmpl" href="templates/Plant &amp; Value Stream - GSBB Control Tower.pdf" target="_blank">
+        <div class="card-icon-row">
+          <span class="card-icon">📑</span>
+          <span class="card-badge pdf">PDF</span>
+        </div>
+        <div class="card-name">Plant &amp; Value Stream</div>
+        <div class="card-desc">Template gốc — thiết kế trang Plant &amp; Value Stream</div>
+        <span class="card-arrow">↗</span>
+      </a>
+      <a class="site-card tmpl" href="templates/Quality &amp; COPQ - GSBB Control Tower.pdf" target="_blank">
+        <div class="card-icon-row">
+          <span class="card-icon">📑</span>
+          <span class="card-badge pdf">PDF</span>
+        </div>
+        <div class="card-name">Quality &amp; COPQ</div>
+        <div class="card-desc">Template gốc — thiết kế trang Quality &amp; COPQ</div>
+        <span class="card-arrow">↗</span>
+      </a>
+      <a class="site-card tmpl" href="templates/Supply &amp; Inventory - GSBB Control Tower.pdf" target="_blank">
+        <div class="card-icon-row">
+          <span class="card-icon">📑</span>
+          <span class="card-badge pdf">PDF</span>
+        </div>
+        <div class="card-name">Supply &amp; Inventory</div>
+        <div class="card-desc">Template gốc — thiết kế trang Supply &amp; Inventory</div>
+        <span class="card-arrow">↗</span>
+      </a>
+      <a class="site-card tmpl" href="templates/OC &amp; IPAM Control Board - GSBB Control Tower.pdf" target="_blank">
+        <div class="card-icon-row">
+          <span class="card-icon">📑</span>
+          <span class="card-badge pdf">PDF</span>
+        </div>
+        <div class="card-name">OC &amp; IPAM Control Board</div>
+        <div class="card-desc">Template gốc — thiết kế trang OC &amp; IPAM Board</div>
+        <span class="card-arrow">↗</span>
+      </a>
+    </div>
+
+    <!-- 14 OC SNAPSHOT TABLE -->
+    <div class="section-header oc-section">
+      <span class="section-title">📋 14 OC — Snapshot</span>
+      <span class="section-count">sample data · kết nối serve.py để load thực</span>
+      <div class="section-line"></div>
+    </div>
+    <table class="oc-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tên OC</th>
+          <th>Trục</th>
+          <th>Phase</th>
+          <th>Status</th>
+          <th style="min-width:140px">Tiến độ</th>
+          <th>Next Milestone</th>
+          <th>Blocker</th>
+        </tr>
+      </thead>
+      <tbody id="oc-rows">
+        <!-- Loaded by JS hoặc sample dưới đây -->
+        <tr>
+          <td colspan="8" style="text-align:center;color:var(--muted);padding:2rem;">
+            Kết nối <code style="color:#60a5fa">python3 CONTROL_TOWER/serve.py 8080</code> để load dữ liệu thực
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div><!-- /content -->
+
+  <div class="page-footer">
+    <span>GSBB Digital Command Center · v1.0 · 2026</span>
+    <span>Data Source: Bravo ERP · MES · Google Sheets · Claude AI Layer</span>
+  </div>
+</div><!-- /main -->
+
+<script>
+// Clock
+function tick() {
+  const now = new Date().toLocaleString('vi-VN', {
+    weekday:'short', day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit', second:'2-digit'
+  });
+  document.getElementById('top-time').textContent = now;
+  document.getElementById('sb-time').textContent  = now;
+}
+tick();
+setInterval(tick, 1000);
+
+// Try to load data from serve.py (optional — works only when server is running)
+async function tryLoadData() {
+  try {
+    const [fin, oc] = await Promise.all([
+      fetch('/data/finance/finance_data_sample.json', { cache:'no-store' }).then(r => r.json()),
+      fetch('/data/campaign/oc_status_data_sample.json', { cache:'no-store' }).then(r => r.json()),
+    ]);
+    const fmt = n => n == null ? '—' : Number(n).toLocaleString('vi-VN', { maximumFractionDigits: 1 });
+
+    document.querySelectorAll('.kpi-value')[0].textContent = fmt(fin.data.revenue_bn);
+    document.querySelectorAll('.kpi-value')[1].textContent = fmt(fin.data.ebitda_bn);
+    document.querySelectorAll('.kpi-value')[2].textContent = fmt(fin.data.copq_bn);
+
+    const r = oc.data.rag_count.red, a = oc.data.rag_count.amber, g = oc.data.rag_count.green;
+    document.getElementById('oc-g').textContent = g;
+    document.getElementById('oc-a').textContent = a;
+    document.getElementById('oc-r').textContent = r;
+    document.getElementById('oc-summary').textContent = `${g+a+r} OCs`;
+
+    document.querySelectorAll('.kpi-value')[4].textContent = oc.data.escalation_queue_count;
+    document.querySelectorAll('.kpi-value')[5].textContent = oc.data.waiting_decisions_count;
+
+    const tbody = document.getElementById('oc-rows');
+    tbody.innerHTML = oc.data.oc_list.map(o => {
+      const pct = o.completion_pct ?? 0;
+      const cls = o.status === 'green' ? 'green' : o.status === 'amber' ? 'amber' : 'red';
+      return `<tr>
+        <td style="color:var(--muted)">${o.id}</td>
+        <td><strong>${o.name}</strong></td>
+        <td style="color:var(--muted)">${o.truc||''}</td>
+        <td style="color:var(--muted)">${o.phase||''}</td>
+        <td><span class="rag ${cls}">${o.status.toUpperCase()}</span></td>
+        <td>
+          <div class="pct-bar-wrap">
+            <div class="pct-bar"><div class="pct-fill ${cls}" style="width:${pct}%"></div></div>
+            <span class="pct-label">${pct}%</span>
+          </div>
+        </td>
+        <td>${o.next_milestone||''}<br><small style="color:var(--muted)">${o.milestone_due||''}</small></td>
+        <td style="color:var(--muted);font-size:.75rem">${o.blocker||''}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    // Silent fail — serve.py chưa chạy, hiển thị placeholder
+  }
+}
+tryLoadData();
+</script>
+</body>
+</html>

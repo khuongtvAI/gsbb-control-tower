@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Finance Data",
+  "type": "object",
+  "required": ["meta", "data"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["extracted_at", "source", "period"],
+      "properties": {
+        "extracted_at": { "type": "string", "format": "date-time" },
+        "source": { "type": "string", "examples": ["Bravo"] },
+        "period": { "type": "string", "description": "YYYY-MM hoặc YYYY-WW" }
+      }
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "revenue_bn":          { "type": "number", "description": "Doanh thu (tỷ VNĐ)" },
+        "gross_margin_pct":    { "type": "number" },
+        "ebitda_bn":           { "type": "number" },
+        "copq_bn":             { "type": "number" },
+        "cash_position_bn":    { "type": "number" },
+        "ar_overdue_bn":       { "type": "number" },
+        "ap_due_bn":           { "type": "number" },
+        "inventory_value_bn":  { "type": "number" },
+        "rag": {
+          "type": "object",
+          "additionalProperties": { "enum": ["red", "amber", "green"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Quality & COPQ — GSBB Control Tower</title>
+<link rel="stylesheet" href="assets/ct-shared.css">
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <a class="home-link" href="../../index.html">⬡ Hub</a>
+    <h1>GSBB Control Tower</h1>
+  </div>
+  <nav>
+    <a href="index.html">1. Executive</a>
+    <a href="finance.html">2. Finance</a>
+    <a href="customer.html">3. Customer</a>
+    <a href="otip.html">4. OTIP</a>
+    <a href="plant.html">5. Plant</a>
+    <a href="quality.html" class="active">6. Quality</a>
+    <a href="supply.html">7. Supply</a>
+    <a href="oc-ipam.html">8. OC &amp; IPAM</a>
+  </nav>
+</header>
+<main>
+  <div class="page-hero">
+    <span class="icon">🎯</span>
+    <div>
+      <h2>Quality &amp; COPQ</h2>
+      <p>Tỷ lệ lỗi · COPQ · Top defects · Customer complaints · Scrap — Owner: QA Lead</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card red">
+      <div class="kpi-label">COPQ</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">tỷ VNĐ · tháng này</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Defect Rate</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% · target &lt; 0.5%</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Customer Complaints</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">case · tuần này</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Scrap Rate</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% nguyên liệu bỏ</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">First Pass Yield</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% pass lần đầu</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Rework Rate</div>
+      <div class="kpi-value">—</div>
+      <div class="kpi-sub">% sản phẩm làm lại</div>
+    </div>
+  </div>
+
+  <div class="placeholder-box">
+    <div class="placeholder-icon">🔬</div>
+    <div class="placeholder-title">Quality Dashboard — COPQ &amp; Defect Analysis</div>
+    <div class="placeholder-desc">
+      Biểu đồ: COPQ waterfall theo danh mục (scrap/rework/warranty/complaint), Defect Pareto, Control chart lỗi theo dây chuyền, Customer complaint trend.
+    </div>
+    <div class="placeholder-tags">
+      <span class="placeholder-tag">COPQ Waterfall</span>
+      <span class="placeholder-tag">Defect Pareto</span>
+      <span class="placeholder-tag">Control Chart</span>
+      <span class="placeholder-tag">Complaint Trend</span>
+      <span class="placeholder-tag">Scrap Analysis</span>
+    </div>
+    <div class="data-note">
+      Source: <code>DATA_LAYER/quality/quality_data.json</code>
+      · Input: <code>20260506_QC_Du_Lieu_Loi_Thang11_2025.xlsx</code>
+    </div>
+  </div>
+  <div class="meta">Source: QA System · MES · Updated: <span id="ts">—</span></div>
+</main>
+<script>document.getElementById('ts').textContent = new Date().toLocaleString('vi-VN');</script>
+</body>
+</html>

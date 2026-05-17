@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>GSBB War Room</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: #0f172a; color: #e2e8f0; margin: 0; }
+  header { padding: 1.5rem 2rem; border-bottom: 1px solid #1e293b; }
+  h1 { font-size: 1.25rem; }
+  .rooms { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+  .room { background: #1e293b; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #3b82f6; }
+  .room h2 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .room p { color: #94a3b8; font-size: 0.875rem; margin-bottom: 1rem; }
+  .room a { color: #60a5fa; text-decoration: none; font-size: 0.875rem; }
+  .buckets { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .bucket { background: #0f172a; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; color: #cbd5e1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>GSBB War Room — 4 Strategic Decision Rooms</h1>
+</header>
+<main class="rooms">
+  <div class="room">
+    <h2>1. Campaign Portfolio</h2>
+    <p>Phân loại 14 OC theo quyết định chiến lược trong tuần.</p>
+    <div class="buckets">
+      <span class="bucket">Accelerate</span><span class="bucket">Support</span>
+      <span class="bucket">Watch</span><span class="bucket">Reset</span><span class="bucket">Close</span>
+    </div>
+    <a href="campaign-portfolio.html">→ Vào room</a>
+  </div>
+  <div class="room">
+    <h2>2. Customer Portfolio</h2>
+    <p>Quyết định cho top 15 khách hàng chiến lược.</p>
+    <div class="buckets">
+      <span class="bucket">Protect</span><span class="bucket">Grow</span>
+      <span class="bucket">Fix</span><span class="bucket">Price-up</span><span class="bucket">Exit</span>
+    </div>
+    <a href="customer-portfolio.html">→ Vào room</a>
+  </div>
+  <div class="room">
+    <h2>3. Plant / Technology Family</h2>
+    <p>Quyết định đầu tư · ổn định · phase out cho từng line / family.</p>
+    <div class="buckets">
+      <span class="bucket">Invest</span><span class="bucket">Stabilize</span>
+      <span class="bucket">Fix bottleneck</span><span class="bucket">Pilot AI</span><span class="bucket">Phase out</span>
+    </div>
+    <a href="plant-family.html">→ Vào room</a>
+  </div>
+  <div class="room">
+    <h2>4. Issue / Loss Hotspot</h2>
+    <p>Quyết định cho top issues phát hiện trong tuần.</p>
+    <div class="buckets">
+      <span class="bucket">Fix now</span><span class="bucket">Root-cause project</span>
+      <span class="bucket">Monitor</span><span class="bucket">SOP needed</span><span class="bucket">Escalate</span>
+    </div>
+    <a href="issue-loss.html">→ Vào room</a>
+  </div>
+</main>
+</body>
+</html>

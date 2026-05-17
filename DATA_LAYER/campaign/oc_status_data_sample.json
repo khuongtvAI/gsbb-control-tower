@@ -1,0 +1,30 @@
+{
+  "meta": {
+    "extracted_at": "2026-05-17T08:00:00+07:00",
+    "source": "PMO Master Action Tracker W20",
+    "week_label": "2026-W20"
+  },
+  "data": {
+    "overall_status": "amber",
+    "total_oc": 14,
+    "rag_count": { "red": 3, "amber": 6, "green": 5 },
+    "escalation_queue_count": 4,
+    "waiting_decisions_count": 2,
+    "oc_list": [
+      { "id": "OC-01", "name": "Tái cấu trúc BU Bao Bì Nhựa",       "owner": "[TBD]", "truc": "BU", "phase": "Pilot",     "status": "green", "completion_pct": 65, "next_milestone": "Demo pilot line 2", "milestone_due": "2026-05-25", "blocker": "" },
+      { "id": "OC-02", "name": "Sales Force Effectiveness",          "owner": "[TBD]", "truc": "BU", "phase": "Design",    "status": "amber", "completion_pct": 40, "next_milestone": "Hoàn thiện sales playbook", "milestone_due": "2026-05-30", "blocker": "Thiếu data CRM lịch sử" },
+      { "id": "OC-03", "name": "MES rollout Plant 1",                "owner": "[TBD]", "truc": "BO", "phase": "Pilot",     "status": "red",   "completion_pct": 25, "next_milestone": "Go-live line A", "milestone_due": "2026-06-01", "blocker": "Tích hợp Xunyue trễ 3 tuần" },
+      { "id": "OC-04", "name": "OEE Improvement Program",            "owner": "[TBD]", "truc": "BO", "phase": "Discovery", "status": "amber", "completion_pct": 30, "next_milestone": "Pareto downtime 30 ngày", "milestone_due": "2026-06-15", "blocker": "" },
+      { "id": "OC-05", "name": "QA NCR/CAR Process Reform",          "owner": "[TBD]", "truc": "BG", "phase": "Design",    "status": "green", "completion_pct": 70, "next_milestone": "Ban hành SOP QA-001", "milestone_due": "2026-05-28", "blocker": "" },
+      { "id": "OC-06", "name": "COPQ Reduction Sprint",              "owner": "[TBD]", "truc": "BG", "phase": "Pilot",     "status": "red",   "completion_pct": 35, "next_milestone": "Validate savings T5", "milestone_due": "2026-05-31", "blocker": "Định nghĩa COPQ chưa thống nhất giữa Finance và QA" },
+      { "id": "OC-07", "name": "Customer Portfolio Segmentation",    "owner": "[TBD]", "truc": "BU", "phase": "Design",    "status": "green", "completion_pct": 75, "next_milestone": "CEO chốt top 15 KH", "milestone_due": "2026-05-24", "blocker": "" },
+      { "id": "OC-08", "name": "FDI Pipeline Expansion",             "owner": "[TBD]", "truc": "BU", "phase": "Discovery", "status": "amber", "completion_pct": 20, "next_milestone": "Long list 30 FDI target", "milestone_due": "2026-06-10", "blocker": "" },
+      { "id": "OC-09", "name": "Supply Chain Resilience",            "owner": "[TBD]", "truc": "BO", "phase": "Discovery", "status": "amber", "completion_pct": 25, "next_milestone": "Risk map top 20 vật tư", "milestone_due": "2026-06-15", "blocker": "" },
+      { "id": "OC-10", "name": "AI PMO (Claude integration)",        "owner": "[TBD]", "truc": "BG", "phase": "Pilot",     "status": "green", "completion_pct": 60, "next_milestone": "Daily insights live", "milestone_due": "2026-05-30", "blocker": "" },
+      { "id": "OC-11", "name": "P&C Operating Rhythm",               "owner": "[TBD]", "truc": "BG", "phase": "Design",    "status": "green", "completion_pct": 80, "next_milestone": "Họp tuần chuẩn hóa", "milestone_due": "2026-05-22", "blocker": "" },
+      { "id": "OC-12", "name": "GSP_NEXT_30 Brand Refresh",          "owner": "[TBD]", "truc": "BU", "phase": "Pilot",     "status": "amber", "completion_pct": 50, "next_milestone": "Soft launch nội bộ", "milestone_due": "2026-06-05", "blocker": "" },
+      { "id": "OC-13", "name": "HR & Culture Re-alignment",          "owner": "[TBD]", "truc": "BG", "phase": "Design",    "status": "amber", "completion_pct": 35, "next_milestone": "KPI framework v2", "milestone_due": "2026-06-12", "blocker": "" },
+      { "id": "OC-14", "name": "Control Tower & War Room",           "owner": "[TBD]", "truc": "BG", "phase": "Pilot",     "status": "green", "completion_pct": 45, "next_milestone": "Nhóm A 4 trang live", "milestone_due": "2026-06-07", "blocker": "" }
+    ]
+  }
+}
