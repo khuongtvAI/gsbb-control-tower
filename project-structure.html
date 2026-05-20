@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSBB_BUILD — Project Structure</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3347;
+    --accent: #4f8ef7;
+    --accent2: #7c4dff;
+    --green: #16a34a;
+    --amber: #f59e0b;
+    --red: #dc2626;
+    --text: #e2e8f0;
+    --muted: #8b95a6;
+    --tag-bg: #1e2535;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.6; }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, #0d1b3e 0%, #1a1d27 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 20px;
+  }
+  .header-row { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
+  .logo { width: 42px; height: 42px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #fff; flex-shrink: 0; }
+  h1 { font-size: 22px; font-weight: 700; color: #fff; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-left: 58px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-blue { background: rgba(79,142,247,0.15); color: var(--accent); border: 1px solid rgba(79,142,247,0.3); }
+  .badge-green { background: rgba(22,163,74,0.15); color: #4ade80; border: 1px solid rgba(22,163,74,0.3); }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-red { background: rgba(220,38,38,0.15); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
+  .badge-purple { background: rgba(124,77,255,0.15); color: #c084fc; border: 1px solid rgba(124,77,255,0.3); }
+  .header-meta { display: flex; gap: 10px; margin-top: 10px; margin-left: 58px; flex-wrap: wrap; }
+
+  /* ── Layout ── */
+  .container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
+  .grid-2 { display: grid; grid-template-columns: 420px 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 1100px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ── Section titles ── */
+  .section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── Architecture Flow ── */
+  .arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .arch-flow { display: flex; flex-direction: column; gap: 4px; }
+  .flow-row { display: flex; align-items: center; gap: 8px; }
+  .flow-box {
+    padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .flow-source { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: var(--amber); }
+  .flow-extract { background: rgba(79,142,247,0.12); border: 1px solid rgba(79,142,247,0.3); color: var(--accent); }
+  .flow-data { background: rgba(124,77,255,0.12); border: 1px solid rgba(124,77,255,0.3); color: #c084fc; }
+  .flow-ui { background: rgba(22,163,74,0.12); border: 1px solid rgba(22,163,74,0.3); color: #4ade80; }
+  .flow-ai { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #34d399; }
+  .flow-arrow { color: var(--muted); font-size: 16px; }
+  .flow-multi { display: flex; gap: 6px; flex-wrap: wrap; }
+  .flow-divider { height: 1px; background: var(--border); margin: 10px 0; }
+  .arch-label { font-size: 11px; color: var(--muted); margin: 2px 0 4px 4px; }
+
+  /* ── File Tree ── */
+  .tree-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .tree { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 12.5px; }
+  .tree-node { cursor: default; }
+  .tree-folder { cursor: pointer; user-select: none; }
+  .tree-line { display: flex; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 6px; transition: background 0.15s; }
+  .tree-line:hover { background: var(--surface2); }
+  .tree-children { padding-left: 18px; overflow: hidden; transition: all 0.2s; }
+  .tree-children.collapsed { display: none; }
+  .tree-icon { font-size: 13px; width: 16px; flex-shrink: 0; }
+  .tree-label { flex: 1; }
+  .tree-tag { font-size: 10px; padding: 1px 6px; border-radius: 10px; font-family: 'Segoe UI', sans-serif; }
+  .tag-done { background: rgba(22,163,74,0.2); color: #4ade80; }
+  .tag-wip { background: rgba(245,158,11,0.2); color: var(--amber); }
+  .tag-phase2 { background: rgba(79,142,247,0.2); color: var(--accent); }
+  .tag-data { background: rgba(124,77,255,0.2); color: #c084fc; }
+  .toggle-icon { font-size: 10px; color: var(--muted); transition: transform 0.2s; }
+  .tree-folder.open > .tree-line .toggle-icon { transform: rotate(90deg); }
+  .color-folder { color: #f0c060; }
+  .color-py { color: #4ec9b0; }
+  .color-html { color: #e07070; }
+  .color-json { color: #ce9178; }
+  .color-md { color: #8bc4f8; }
+  .color-yaml { color: #dcdcaa; }
+  .color-txt { color: var(--muted); }
+  .color-sql { color: #569cd6; }
+
+  /* ── Module Cards ── */
+  .modules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .module-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; transition: border-color 0.2s, transform 0.2s; cursor: default;
+  }
+  .module-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .module-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+  .module-icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .icon-core { background: rgba(245,158,11,0.15); }
+  .icon-data { background: rgba(124,77,255,0.15); }
+  .icon-tower { background: rgba(22,163,74,0.15); }
+  .icon-war { background: rgba(220,38,38,0.15); }
+  .icon-ai { background: rgba(16,185,129,0.15); }
+  .icon-docs { background: rgba(79,142,247,0.15); }
+  .module-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .module-desc { font-size: 11px; color: var(--muted); }
+  .module-body { font-size: 12px; color: #b0b8c8; }
+  .module-list { list-style: none; margin-top: 8px; }
+  .module-list li { padding: 4px 0; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); }
+  .module-list li:last-child { border-bottom: none; }
+  .li-icon { font-size: 11px; width: 14px; }
+  .module-footer { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--tag-bg); color: var(--muted); border: 1px solid var(--border); }
+
+  /* ── Data Domains ── */
+  .domains-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 24px; }
+  @media (max-width: 900px) { .domains-row { grid-template-columns: repeat(3, 1fr); } }
+  .domain-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+  .domain-icon { font-size: 24px; margin-bottom: 6px; }
+  .domain-name { font-weight: 700; font-size: 12px; color: #fff; margin-bottom: 4px; }
+  .domain-files { font-size: 10.5px; color: var(--muted); line-height: 1.5; }
+
+  /* ── Phase Timeline ── */
+  .timeline { display: flex; gap: 0; margin-bottom: 24px; }
+  .phase { flex: 1; background: var(--surface); border: 1px solid var(--border); padding: 16px; position: relative; }
+  .phase:first-child { border-radius: 10px 0 0 10px; }
+  .phase:last-child { border-radius: 0 10px 10px 0; }
+  .phase + .phase { border-left: none; }
+  .phase-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .phase-title { font-weight: 700; font-size: 13px; color: #fff; margin-bottom: 6px; }
+  .phase-items { font-size: 11px; color: var(--muted); list-style: none; }
+  .phase-items li::before { content: '→ '; color: var(--accent); }
+  .phase-now { border-color: var(--accent); background: rgba(79,142,247,0.05); }
+  .phase-now .phase-label { color: var(--accent); }
+
+  /* ── Footer ── */
+  footer { border-top: 1px solid var(--border); padding: 20px 40px; color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<header>
+  <div class="header-row">
+    <div class="logo">GS</div>
+    <div>
+      <h1>GSBB_BUILD &nbsp;—&nbsp; Project Structure</h1>
+    </div>
+  </div>
+  <div class="subtitle">Goldsun Bao Bì · Control Tower + War Room · AI-assisted Operations</div>
+  <div class="header-meta">
+    <span class="badge badge-blue">📅 2026-05-17</span>
+    <span class="badge badge-amber">🏗️ Phase 1 — Scaffolding</span>
+    <span class="badge badge-purple">🤖 Claude Code</span>
+    <span class="badge badge-green">✅ Schema Locked</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ════ ARCHITECTURE FLOW ════ -->
+  <div class="section-title">Kiến trúc hệ thống</div>
+  <div class="arch-card">
+    <div class="arch-label">Nguồn dữ liệu</div>
+    <div class="flow-row">
+      <div class="flow-multi">
+        <div class="flow-box flow-source">📊 Bravo ERP</div>
+        <div class="flow-box flow-source">⚙️ MES / Xunyue</div>
+        <div class="flow-box flow-source">📋 Google Sheets</div>
+        <div class="flow-box flow-source">📁 Excel Inbox</div>
+      </div>
+    </div>
+    <div style="text-align:center;color:var(--muted);font-size:20px;padding:4px 0">↓</div>
+    <div class="arch-label">Extract Layer</div>
+    <div class="flow-row">
+      <div class="flow-box flow-extract" style="flex:1;justify-content:center">🔄 CORE_SCRIPTS &nbsp;/&nbsp; extract scripts (CONTROL_TOWER/extract/refresh_all.py)</div>
+    </div>
+    <div style="text-align:center;color:var(--muted);font-size:20px;padding:4px 0">↓</div>
+    <div class="arch-label">Source of Truth</div>
+    <div class="flow-row">
+      <div class="flow-box flow-data" style="flex:1;justify-content:center">🗄️ DATA_LAYER &nbsp;/&nbsp; finance · customer · production · quality · campaign</div>
+    </div>
+    <div style="text-align:center;color:var(--muted);font-size:20px;padding:4px 0">↓</div>
+    <div class="arch-label">Presentation + AI Layer</div>
+    <div class="flow-row">
+      <div class="flow-multi" style="flex:1">
+        <div class="flow-box flow-ui" style="flex:1;justify-content:center">📡 CONTROL_TOWER<br><span style="font-size:10px;font-weight:400">Dashboard điều hành (8 trang)</span></div>
+        <div class="flow-box flow-ui" style="flex:1;justify-content:center;border-color:rgba(220,38,38,0.4);color:#f87171;background:rgba(220,38,38,0.08)">🏛️ WAR_ROOM<br><span style="font-size:10px;font-weight:400">Chốt quyết định chiến lược (4 rooms)</span></div>
+        <div class="flow-box flow-ai" style="flex:1;justify-content:center">🤖 CLAUDE_LAYER<br><span style="font-size:10px;font-weight:400">AI narrative + query tools</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ 2 COLUMN: TREE + MODULES ════ -->
+  <div class="section-title">Chi tiết cấu trúc</div>
+  <div class="grid-2">
+
+    <!-- LEFT: File Tree -->
+    <div class="tree-card">
+      <div class="section-title" style="margin-bottom:14px">File Tree</div>
+      <div class="tree" id="tree"></div>
+    </div>
+
+    <!-- RIGHT: Module Cards -->
+    <div>
+      <div class="modules-grid">
+
+        <!-- CORE_SCRIPTS -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon icon-core">⚙️</div>
+            <div>
+              <div class="module-name">CORE_SCRIPTS</div>
+              <div class="module-desc">Shared Python Modules</div>
+            </div>
+          </div>
+          <div class="module-body">
+            <ul class="module-list">
+              <li><span class="li-icon">✅</span> schema_validator.py</li>
+              <li><span class="li-icon">✅</span> excel_reader.py</li>
+              <li><span class="li-icon">⏳</span> bravo_client.py <span class="tree-tag tag-phase2">Phase 2</span></li>
+              <li><span class="li-icon">⏳</span> mes_client.py <span class="tree-tag tag-phase2">Phase 2</span></li>
+              <li><span class="li-icon">⏳</span> sheets_client.py</li>
+              <li><span class="li-icon">⏳</span> ai_insights.py <span class="tree-tag tag-phase2">Phase 2</span></li>
+              <li><span class="li-icon">⏳</span> telegram_notify.py</li>
+            </ul>
+          </div>
+          <div class="module-footer">
+            <span class="pill">Python 3.11+</span>
+            <span class="pill">Shared lib</span>
+          </div>
+        </div>
+
+        <!-- DATA_LAYER -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon icon-data">🗄️</div>
+            <div>
+              <div class="module-name">DATA_LAYER</div>
+              <div class="module-desc">Normalized JSON · Source of Truth</div>
+            </div>
+          </div>
+          <div class="module-body">
+            <ul class="module-list">
+              <li><span class="li-icon">💰</span> finance/ &nbsp;<span class="tree-tag tag-done">Bravo daily</span></li>
+              <li><span class="li-icon">👥</span> customer/ &nbsp;<span class="tree-tag tag-done">Sales weekly</span></li>
+              <li><span class="li-icon">🏭</span> production/ &nbsp;<span class="tree-tag tag-done">MES daily</span></li>
+              <li><span class="li-icon">🔍</span> quality/ &nbsp;<span class="tree-tag tag-done">QA daily</span></li>
+              <li><span class="li-icon">🎯</span> campaign/ &nbsp;<span class="tree-tag tag-done">PMO weekly</span></li>
+              <li><span class="li-icon">📐</span> schemas/ &nbsp;<span class="tree-tag tag-done">Locked</span></li>
+            </ul>
+          </div>
+          <div class="module-footer">
+            <span class="pill">JSON</span>
+            <span class="pill">Schema-locked</span>
+            <span class="pill">1 source of truth</span>
+          </div>
+        </div>
+
+        <!-- CONTROL_TOWER -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon icon-tower">📡</div>
+            <div>
+              <div class="module-name">CONTROL_TOWER</div>
+              <div class="module-desc">Operational Dashboard · 8 pages</div>
+            </div>
+          </div>
+          <div class="module-body">
+            <ul class="module-list">
+              <li><span class="li-icon">1</span> index.html — Executive</li>
+              <li><span class="li-icon">2</span> finance.html — CFO</li>
+              <li><span class="li-icon">3</span> customer.html — Sales</li>
+              <li><span class="li-icon">4</span> otip.html — Sales+KHSX</li>
+              <li><span class="li-icon">5</span> plant.html — SX Lead</li>
+              <li><span class="li-icon">6</span> quality.html — QA Lead</li>
+              <li><span class="li-icon">7</span> supply.html — SCM</li>
+              <li><span class="li-icon">8</span> oc-ipam.html — PMO</li>
+            </ul>
+          </div>
+          <div class="module-footer">
+            <span class="pill">Static HTML</span>
+            <span class="pill">Chart.js</span>
+            <span class="pill">port :8080</span>
+          </div>
+        </div>
+
+        <!-- WAR_ROOM -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon icon-war">🏛️</div>
+            <div>
+              <div class="module-name">WAR_ROOM</div>
+              <div class="module-desc">Strategic Decision Rooms · 4 rooms</div>
+            </div>
+          </div>
+          <div class="module-body">
+            <ul class="module-list">
+              <li><span class="li-icon">🎯</span> campaign-portfolio.html</li>
+              <li><span class="li-icon">👥</span> customer-portfolio.html</li>
+              <li><span class="li-icon">🏭</span> plant-family.html</li>
+              <li><span class="li-icon">🔥</span> issue-loss.html</li>
+            </ul>
+            <div style="margin-top:10px;font-size:11px;color:var(--muted)">Classify engine: <code style="color:#ce9178">classify/rules.py</code> → CEO + PMO chốt threshold</div>
+          </div>
+          <div class="module-footer">
+            <span class="pill">Private/local</span>
+            <span class="pill">Rule engine</span>
+            <span class="pill">port :8090</span>
+          </div>
+        </div>
+
+        <!-- CLAUDE_LAYER -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon icon-ai">🤖</div>
+            <div>
+              <div class="module-name">CLAUDE_LAYER</div>
+              <div class="module-desc">AI Narrative + Query Tools</div>
+            </div>
+          </div>
+          <div class="module-body">
+            <ul class="module-list">
+              <li><span class="li-icon">🔧</span> query_tools.py</li>
+              <li><span class="li-icon">✨</span> generate_insights.py</li>
+              <li><span class="li-icon">📝</span> prompts/daily_insights.md</li>
+              <li><span class="li-icon">📝</span> prompts/ceo_weekly_review.md</li>
+            </ul>
+            <div style="margin-top:10px;font-size:11px;color:var(--muted)">Output: <code style="color:#ce9178">DATA_LAYER/ai_insights.json</code> · <code style="color:#ce9178">ceo_weekly_brief.md</code></div>
+          </div>
+          <div class="module-footer">
+            <span class="pill">Anthropic API</span>
+            <span class="pill">zero-data-retention</span>
+          </div>
+        </div>
+
+        <!-- DOCS -->
+        <div class="module-card">
+          <div class="module-header">
+            <div class="module-icon icon-docs">📚</div>
+            <div>
+              <div class="module-name">Tài liệu & Phase 2</div>
+              <div class="module-desc">Docs · phase2 · templates</div>
+            </div>
+          </div>
+          <div class="module-body">
+            <ul class="module-list">
+              <li><span class="li-icon">📄</span> README.md</li>
+              <li><span class="li-icon">📄</span> IMPLEMENTATION_PLAN.md</li>
+              <li><span class="li-icon">📄</span> DATA_REQUIREMENTS.md</li>
+              <li><span class="li-icon">📄</span> HANDOVER_TEAM_GSBB.md</li>
+              <li><span class="li-icon">🚀</span> phase2/vercel.json</li>
+              <li><span class="li-icon">🗃️</span> phase2/supabase_schema.sql</li>
+              <li><span class="li-icon">⚡</span> phase2/github_actions_cron.yml</li>
+            </ul>
+          </div>
+          <div class="module-footer">
+            <span class="pill">Vercel</span>
+            <span class="pill">Supabase</span>
+            <span class="pill">GitHub Actions</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ DATA DOMAINS ════ -->
+  <div class="section-title">5 Data Domains</div>
+  <div class="domains-row">
+    <div class="domain-card">
+      <div class="domain-icon">💰</div>
+      <div class="domain-name">finance</div>
+      <div class="domain-files">finance_data.json<br>ebitda_bridge.json</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">👥</div>
+      <div class="domain-name">customer</div>
+      <div class="domain-files">customer_data.json<br>pipeline_data.json<br>otip_data.json</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">🏭</div>
+      <div class="domain-name">production</div>
+      <div class="domain-files">production_data.json<br>oee_data.json<br>downtime_data.json</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">🔍</div>
+      <div class="domain-name">quality</div>
+      <div class="domain-files">quality_data.json<br>copq_data.json<br>ncr_capa_data.json</div>
+    </div>
+    <div class="domain-card">
+      <div class="domain-icon">🎯</div>
+      <div class="domain-name">campaign</div>
+      <div class="domain-files">campaign_data.json<br>oc_status_data.json<br>ipam_log_data.json<br>escalation_queue.json<br>waiting_decisions.json</div>
+    </div>
+  </div>
+
+  <!-- ════ PHASE TIMELINE ════ -->
+  <div class="section-title">Lộ trình triển khai</div>
+  <div class="timeline">
+    <div class="phase phase-now">
+      <div class="phase-label" style="color:var(--accent)">✅ Hiện tại · Phase 1</div>
+      <div class="phase-title">Local Dev</div>
+      <ul class="phase-items">
+        <li>Scaffolding folder</li>
+        <li>Sample data + Schema</li>
+        <li>Static HTML dashboard</li>
+        <li>Excel inbox → JSON</li>
+        <li>python3 serve.py</li>
+      </ul>
+    </div>
+    <div class="phase">
+      <div class="phase-label" style="color:var(--amber)">⏳ Phase 2</div>
+      <div class="phase-title">Cloud Deploy</div>
+      <ul class="phase-items">
+        <li>Vercel hosting</li>
+        <li>Supabase DB + Auth</li>
+        <li>GitHub Actions cron</li>
+        <li>Bravo API connector</li>
+        <li>MES connector</li>
+      </ul>
+    </div>
+    <div class="phase">
+      <div class="phase-label" style="color:var(--muted)">🔮 Phase 3</div>
+      <div class="phase-title">AI Automation</div>
+      <ul class="phase-items">
+        <li>Auto daily insights</li>
+        <li>CEO weekly brief</li>
+        <li>Telegram alerts</li>
+        <li>MCP integration</li>
+        <li>Live OC tracking</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ════ COMMAND QUICK REF ════ -->
+  <div class="section-title">Quick Commands</div>
+  <div class="arch-card" style="margin-bottom:0">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">CONTROL TOWER</div>
+        <pre style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;color:#4ade80;border:1px solid var(--border);overflow-x:auto">cd CONTROL_TOWER
+python3 serve.py 8080
+# → http://localhost:8080</pre>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">WAR ROOM</div>
+        <pre style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;color:#f87171;border:1px solid var(--border);overflow-x:auto">cd WAR_ROOM
+python3 serve.py 8090
+# → http://localhost:8090</pre>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">REFRESH DATA</div>
+        <pre style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;color:#c084fc;border:1px solid var(--border);overflow-x:auto">python3 CONTROL_TOWER/extract/refresh_all.py</pre>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">AI INSIGHTS</div>
+        <pre style="background:var(--bg);padding:12px;border-radius:8px;font-size:12px;color:#34d399;border:1px solid var(--border);overflow-x:auto">cd CLAUDE_LAYER
+python3 generate_insights.py</pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>GSBB_BUILD · Tài liệu nội bộ Goldsun Bao Bì · Không phát hành ra ngoài</span>
+  <span>Cố vấn kỹ thuật: Lê Vũ Minh (GSF) · <a href="mailto:minhvu.lee@outlook.com">minhvu.lee@outlook.com</a></span>
+</footer>
+
+<script>
+// ── File Tree Data ──
+const treeData = [
+  { type: 'folder', name: 'GSBB_BUILD/', icon: '📁', open: true, cls: 'color-folder', children: [
+    { type: 'folder', name: 'CORE_SCRIPTS/', icon: '📁', open: true, cls: 'color-folder', children: [
+      { type: 'folder', name: 'scripts/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'schema_validator.py', icon: '🐍', cls: 'color-py', tag: 'done' },
+        { type: 'file', name: 'excel_reader.py', icon: '🐍', cls: 'color-py', tag: 'done' },
+        { type: 'file', name: 'bravo_client.py', icon: '🐍', cls: 'color-py', tag: 'phase2' },
+        { type: 'file', name: 'mes_client.py', icon: '🐍', cls: 'color-py', tag: 'phase2' },
+        { type: 'file', name: 'sheets_client.py', icon: '🐍', cls: 'color-py', tag: 'wip' },
+        { type: 'file', name: 'ai_insights.py', icon: '🐍', cls: 'color-py', tag: 'phase2' },
+        { type: 'file', name: 'telegram_notify.py', icon: '🐍', cls: 'color-py', tag: 'wip' },
+      ]},
+      { type: 'file', name: 'CLAUDE.md', icon: '📝', cls: 'color-md' },
+    ]},
+    { type: 'folder', name: 'DATA_LAYER/', icon: '🗄️', open: true, cls: 'color-folder', children: [
+      { type: 'folder', name: 'finance/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'finance_data_sample.json', icon: '{}', cls: 'color-json', tag: 'data' },
+      ]},
+      { type: 'folder', name: 'customer/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'customer_data_sample.json', icon: '{}', cls: 'color-json', tag: 'data' },
+      ]},
+      { type: 'folder', name: 'production/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'production_data_sample.json', icon: '{}', cls: 'color-json', tag: 'data' },
+      ]},
+      { type: 'folder', name: 'quality/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'quality_data_sample.json', icon: '{}', cls: 'color-json', tag: 'data' },
+      ]},
+      { type: 'folder', name: 'campaign/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'campaign_portfolio_classification.json', icon: '{}', cls: 'color-json', tag: 'data' },
+        { type: 'file', name: 'ipam_log_sample.json', icon: '{}', cls: 'color-json', tag: 'data' },
+        { type: 'file', name: 'oc_status_data_sample.json', icon: '{}', cls: 'color-json', tag: 'data' },
+      ]},
+      { type: 'folder', name: 'schemas/', icon: '📐', cls: 'color-folder', children: [
+        { type: 'file', name: 'finance.schema.json', icon: '📐', cls: 'color-json', tag: 'done' },
+        { type: 'file', name: 'customer.schema.json', icon: '📐', cls: 'color-json', tag: 'done' },
+        { type: 'file', name: 'production.schema.json', icon: '📐', cls: 'color-json', tag: 'done' },
+        { type: 'file', name: 'quality.schema.json', icon: '📐', cls: 'color-json', tag: 'done' },
+        { type: 'file', name: 'campaign.schema.json', icon: '📐', cls: 'color-json', tag: 'done' },
+      ]},
+      { type: 'file', name: 'CLAUDE.md', icon: '📝', cls: 'color-md' },
+    ]},
+    { type: 'folder', name: 'CONTROL_TOWER/', icon: '📡', open: true, cls: 'color-folder', children: [
+      { type: 'folder', name: 'app/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'index.html', icon: '🌐', cls: 'color-html' },
+        { type: 'file', name: 'finance.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'customer.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'otip.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'plant.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'quality.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'supply.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'oc-ipam.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+      ]},
+      { type: 'folder', name: 'extract/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'refresh_all.py', icon: '🐍', cls: 'color-py' },
+        { type: 'file', name: 'extract_campaign.py', icon: '🐍', cls: 'color-py' },
+      ]},
+      { type: 'file', name: 'serve.py', icon: '🐍', cls: 'color-py' },
+      { type: 'file', name: 'requirements.txt', icon: '📄', cls: 'color-txt' },
+      { type: 'file', name: 'CLAUDE.md', icon: '📝', cls: 'color-md' },
+    ]},
+    { type: 'folder', name: 'WAR_ROOM/', icon: '🏛️', open: true, cls: 'color-folder', children: [
+      { type: 'folder', name: 'app/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'index.html', icon: '🌐', cls: 'color-html' },
+        { type: 'file', name: 'campaign-portfolio.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'customer-portfolio.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'plant-family.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+        { type: 'file', name: 'issue-loss.html', icon: '🌐', cls: 'color-html', tag: 'wip' },
+      ]},
+      { type: 'folder', name: 'classify/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'classify_campaign.py', icon: '🐍', cls: 'color-py' },
+      ]},
+      { type: 'file', name: 'serve.py', icon: '🐍', cls: 'color-py' },
+      { type: 'file', name: 'requirements.txt', icon: '📄', cls: 'color-txt' },
+      { type: 'file', name: 'CLAUDE.md', icon: '📝', cls: 'color-md' },
+    ]},
+    { type: 'folder', name: 'CLAUDE_LAYER/', icon: '🤖', cls: 'color-folder', children: [
+      { type: 'folder', name: 'prompts/', icon: '📁', cls: 'color-folder', children: [
+        { type: 'file', name: 'daily_insights.md', icon: '📝', cls: 'color-md' },
+        { type: 'file', name: 'ceo_weekly_review.md', icon: '📝', cls: 'color-md' },
+      ]},
+      { type: 'file', name: 'query_tools.py', icon: '🐍', cls: 'color-py' },
+      { type: 'file', name: 'generate_insights.py', icon: '🐍', cls: 'color-py' },
+      { type: 'file', name: 'CLAUDE.md', icon: '📝', cls: 'color-md' },
+    ]},
+    { type: 'folder', name: 'docs/', icon: '📚', cls: 'color-folder', children: [
+      { type: 'file', name: 'BRIEF-Báo_cáo_Tổng_thể_GSBB.md', icon: '📝', cls: 'color-md' },
+      { type: 'file', name: 'BRIEF-Chat-Welcome-Doc-GSBB.md', icon: '📝', cls: 'color-md' },
+      { type: 'file', name: 'BRIEF-Onboarding-Team-GSBB.md', icon: '📝', cls: 'color-md' },
+    ]},
+    { type: 'folder', name: 'phase2/', icon: '🚀', cls: 'color-folder', children: [
+      { type: 'file', name: 'vercel.json', icon: '{}', cls: 'color-json', tag: 'phase2' },
+      { type: 'file', name: 'supabase_schema.sql', icon: '🗃️', cls: 'color-sql', tag: 'phase2' },
+      { type: 'file', name: 'github_actions_cron.yml', icon: '⚡', cls: 'color-yaml', tag: 'phase2' },
+      { type: 'file', name: 'README.md', icon: '📝', cls: 'color-md' },
+    ]},
+    { type: 'folder', name: 'templates/', icon: '📋', cls: 'color-folder', children: [
+      { type: 'file', name: 'README.md', icon: '📝', cls: 'color-md' },
+    ]},
+    { type: 'file', name: 'CLAUDE.md', icon: '📝', cls: 'color-md', tag: 'done' },
+    { type: 'file', name: 'README.md', icon: '📘', cls: 'color-md' },
+    { type: 'file', name: 'IMPLEMENTATION_PLAN.md', icon: '📝', cls: 'color-md' },
+    { type: 'file', name: 'DATA_REQUIREMENTS.md', icon: '📝', cls: 'color-md' },
+    { type: 'file', name: 'HANDOVER_TEAM_GSBB.md', icon: '📝', cls: 'color-md' },
+    { type: 'file', name: 'lessons-learned.md', icon: '📝', cls: 'color-md' },
+    { type: 'file', name: 'requirements.txt', icon: '📄', cls: 'color-txt' },
+  ]}
+];
+
+const tagLabels = { done: '✅', wip: '⏳', phase2: '🚀', data: '{}' };
+const tagClasses = { done: 'tag-done', wip: 'tag-wip', phase2: 'tag-phase2', data: 'tag-data' };
+
+function buildTree(nodes, container) {
+  nodes.forEach(node => {
+    if (node.type === 'folder') {
+      const div = document.createElement('div');
+      div.className = 'tree-node tree-folder' + (node.open ? ' open' : '');
+      const line = document.createElement('div');
+      line.className = 'tree-line';
+      line.innerHTML = `
+        <span class="tree-icon">${node.icon}</span>
+        <span class="tree-label ${node.cls || ''}">${node.name}</span>
+        <span class="toggle-icon">▶</span>
+      `;
+      const children = document.createElement('div');
+      children.className = 'tree-children' + (node.open ? '' : ' collapsed');
+      buildTree(node.children || [], children);
+      line.addEventListener('click', () => {
+        div.classList.toggle('open');
+        children.classList.toggle('collapsed');
+      });
+      div.appendChild(line);
+      div.appendChild(children);
+      container.appendChild(div);
+    } else {
+      const div = document.createElement('div');
+      div.className = 'tree-node';
+      const tagHtml = node.tag
+        ? `<span class="tree-tag ${tagClasses[node.tag]}">${tagLabels[node.tag]}</span>`
+        : '';
+      div.innerHTML = `
+        <div class="tree-line">
+          <span class="tree-icon" style="font-size:11px">${node.icon}</span>
+          <span class="tree-label ${node.cls || ''}">${node.name}</span>
+          ${tagHtml}
+        </div>
+      `;
+      container.appendChild(div);
+    }
+  });
+}
+
+buildTree(treeData, document.getElementById('tree'));
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Đặt file này vào .github/workflows/refresh-control-tower.yml khi handover
+name: Refresh Control Tower Data
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 08:00 GMT+7 daily
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python3 CONTROL_TOWER/extract/refresh_all.py
+      - name: Commit refreshed data
+        run: |
+          git config user.name  "GSBB Bot"
+          git config user.email "bot@gsbb.vn"
+          git add DATA_LAYER/
+          git diff --cached --quiet || {
+            git pull --rebase origin main
+            git commit -m "chore: refresh data $(date +%Y-%m-%d)"
+            git push
+          }
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          BRAVO_API_KEY:               ${{ secrets.BRAVO_API_KEY }}

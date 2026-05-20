@@ -30,3 +30,12 @@ python3 extract/refresh_all.py
 - HTML static (no build step) — Chart.js / Plotly từ CDN
 - Mỗi page fetch `/data/<domain>/<file>.json` qua serve.py proxy
 - RAG color: red `#dc2626` · amber `#f59e0b` · green `#16a34a`
+
+## Liên kết
+
+- [[DATA_LAYER/CLAUDE|DATA_LAYER]] — nguồn dữ liệu JSON duy nhất
+- [[CORE_SCRIPTS/CLAUDE|CORE_SCRIPTS]] — extract scripts + schema validator
+- [[WAR_ROOM/CLAUDE|WAR_ROOM]] — phòng quyết định chiến lược (dùng chung DATA_LAYER)
+- [[CLAUDE_LAYER/CLAUDE|CLAUDE_LAYER]] — AI insights overlay
+- [[IMPLEMENTATION_PLAN]] — lộ trình build 90 ngày
+- [[lessons-learned]] — bài học từ GSF

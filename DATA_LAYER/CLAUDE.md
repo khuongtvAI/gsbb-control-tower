@@ -57,3 +57,12 @@ python3 ../CONTROL_TOWER/extract/refresh_all.py
 ## Validation
 
 Mọi extract script gọi `CORE_SCRIPTS/scripts/schema_validator.py` trước khi ghi file.
+
+## Liên kết
+
+- [[CONTROL_TOWER/CLAUDE|CONTROL_TOWER]] — đọc data từ đây (8 trang)
+- [[WAR_ROOM/CLAUDE|WAR_ROOM]] — đọc data từ đây (4 rooms)
+- [[CORE_SCRIPTS/CLAUDE|CORE_SCRIPTS]] — schema_validator + extract scripts
+- [[CLAUDE_LAYER/CLAUDE|CLAUDE_LAYER]] — AI queries trên data đã chuẩn hóa
+- [[DATA_REQUIREMENTS]] — data inventory + ownership matrix
+- [[lessons-learned]] — LL-001: data không sạch = dự án chết · LL-005: schema migration

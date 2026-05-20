@@ -24,3 +24,11 @@ War Room ≠ Dashboard. War Room là nơi **chốt quyết định chiến lư�
 python3 serve.py 8090
 python3 classify/classify_campaign.py
 ```
+
+## Liên kết
+
+- [[DATA_LAYER/CLAUDE|DATA_LAYER]] — đọc lại từ đây, không nhân đôi data
+- [[CONTROL_TOWER/CLAUDE|CONTROL_TOWER]] — dashboard vận hành (dùng chung DATA_LAYER)
+- [[CLAUDE_LAYER/CLAUDE|CLAUDE_LAYER]] — AI narrative hỗ trợ quyết định
+- [[IMPLEMENTATION_PLAN]] — lộ trình build + War Room deployment options
+- [[lessons-learned]] — LL-003: War Room ≠ Dashboard thứ 2

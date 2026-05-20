@@ -29,7 +29,7 @@ body {
   min-height: 100vh;
 }
 
-/* ── SIDEBAR ──────────────────────────────────────────────────────── */
+/* ── SIDEBAR / NAV ────────────────────────────────────────────────── */
 .sidebar {
   width: var(--sidebar);
   background: #040E08;
@@ -40,46 +40,102 @@ body {
   flex-direction: column;
   overflow-y: auto;
   z-index: 100;
+  transition: width 0.22s ease, transform 0.22s ease;
+}
+.sidebar.collapsed {
+  width: 52px;
+  overflow: hidden;
 }
 .sidebar-brand {
-  padding: 1.25rem 1rem;
+  padding: 1.1rem 1rem;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 60px;
+  flex-shrink: 0;
 }
 .sidebar-brand .logo {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--accent2);
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 .sidebar-brand .sub {
   font-size: 0.7rem;
   color: var(--muted);
   margin-top: 2px;
+  white-space: nowrap;
 }
-.sidebar-section {
-  padding: 0.75rem 0 0.25rem;
+.sidebar.collapsed .brand-text { display: none; }
+.nav-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  width: 26px; height: 26px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-toggle:hover { color: var(--accent2); background: var(--bg2); }
+
+/* Nav sections */
+.sidebar-section { padding: 0.6rem 0 0.2rem; }
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 1rem 0.3rem;
+  cursor: pointer;
+  user-select: none;
 }
 .sidebar-section-label {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--muted);
-  padding: 0 1rem 0.4rem;
 }
+.nav-chevron {
+  font-size: 0.6rem;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.nav-group-header.closed .nav-chevron { transform: rotate(-90deg); }
+.nav-items { overflow: hidden; transition: max-height 0.25s ease; }
+.nav-items.closed { max-height: 0 !important; }
+
+.sidebar.collapsed .nav-group-header { justify-content: center; padding: 0.3rem 0; }
+.sidebar.collapsed .sidebar-section-label { display: none; }
+.sidebar.collapsed .nav-chevron { display: none; }
+
+/* Nav links */
 .sidebar-link {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 1rem;
   text-decoration: none;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.81rem;
   border-left: 3px solid transparent;
   transition: all 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .sidebar-link:hover  { background: var(--bg2); color: var(--text); }
 .sidebar-link.active { border-left-color: var(--accent); background: var(--bg2); color: var(--accent2); }
-.sidebar-link .icon  { width: 16px; text-align: center; font-size: 0.85rem; flex-shrink: 0; }
+.sidebar-link .icon  { width: 16px; text-align: center; font-size: 0.9rem; flex-shrink: 0; }
+.sidebar-link .link-label { flex: 1; }
+.sidebar.collapsed .sidebar-link { padding: 0.45rem 0; justify-content: center; border-left: none; }
+.sidebar.collapsed .link-label  { display: none; }
+.sidebar.collapsed .rag-dot { display: none; }
+
 .rag-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
@@ -90,13 +146,35 @@ body {
 .rag-dot.green  { background: var(--green);  box-shadow: 0 0 4px var(--green); }
 .rag-dot.amber  { background: var(--amber);  box-shadow: 0 0 4px var(--amber); }
 .rag-dot.red    { background: var(--red);    box-shadow: 0 0 4px var(--red); }
+
+/* Tooltip khi collapsed */
+.sidebar.collapsed .sidebar-link { position: relative; }
+.sidebar.collapsed .sidebar-link:hover::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 56px;
+  background: #1a3a25;
+  color: var(--text);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  z-index: 200;
+  pointer-events: none;
+}
+
 .sidebar-footer {
   margin-top: auto;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   border-top: 1px solid var(--border);
   font-size: 0.7rem;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
 }
+.sidebar.collapsed .sidebar-footer { padding: 0.75rem 0; text-align: center; }
+.sidebar.collapsed .footer-text { display: none; }
 
 /* ── MAIN ─────────────────────────────────────────────────────────── */
 .main {
@@ -104,7 +182,9 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  transition: margin-left 0.22s ease;
 }
+.main.expanded { margin-left: 52px; }
 
 /* ── TOPBAR ───────────────────────────────────────────────────────── */
 .topbar {
@@ -379,101 +459,148 @@ table.oc-table {
 <!-- ═══════════════════════════════════════════════════════════════════
      SIDEBAR
 ═══════════════════════════════════════════════════════════════════ -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
   <div class="sidebar-brand">
-    <div class="logo">⬡ GSBB</div>
-    <div class="sub">Digital Command Center</div>
+    <div class="brand-text">
+      <div class="logo">⬡ GSBB</div>
+      <div class="sub">Digital Command Center</div>
+    </div>
+    <button class="nav-toggle" id="nav-toggle" title="Thu gọn menu">‹</button>
   </div>
 
   <nav>
+    <!-- Overview -->
     <div class="sidebar-section">
-      <div class="sidebar-section-label">Overview</div>
-      <a class="sidebar-link active" href="index.html">
-        <span class="icon">🏠</span> Main Hub
-      </a>
+      <div class="nav-group-header" data-group="overview">
+        <span class="sidebar-section-label">Overview</span>
+        <span class="nav-chevron">▾</span>
+      </div>
+      <div class="nav-items" id="group-overview">
+        <a class="sidebar-link active" href="index.html" data-label="Main Hub">
+          <span class="icon">🏠</span>
+          <span class="link-label">Main Hub</span>
+        </a>
+      </div>
     </div>
 
+    <!-- Control Tower -->
     <div class="sidebar-section">
-      <div class="sidebar-section-label">Control Tower</div>
-      <a class="sidebar-link" href="CONTROL_TOWER/app/index.html">
-        <span class="icon">📊</span> Executive Summary
-        <span class="rag-dot green"></span>
-      </a>
-      <a class="sidebar-link" href="CONTROL_TOWER/app/finance.html">
-        <span class="icon">💰</span> Finance
-        <span class="rag-dot amber"></span>
-      </a>
-      <a class="sidebar-link" href="CONTROL_TOWER/app/customer.html">
-        <span class="icon">👥</span> Customer &amp; Market
-        <span class="rag-dot green"></span>
-      </a>
-      <a class="sidebar-link" href="CONTROL_TOWER/app/otip.html">
-        <span class="icon">📦</span> OTIP
-        <span class="rag-dot amber"></span>
-      </a>
-      <a class="sidebar-link" href="CONTROL_TOWER/app/plant.html">
-        <span class="icon">🏭</span> Plant &amp; Value Stream
-        <span class="rag-dot green"></span>
-      </a>
-      <a class="sidebar-link" href="CONTROL_TOWER/app/quality.html">
-        <span class="icon">🎯</span> Quality &amp; COPQ
-        <span class="rag-dot red"></span>
-      </a>
-      <a class="sidebar-link" href="CONTROL_TOWER/app/supply.html">
-        <span class="icon">🔗</span> Supply &amp; Inventory
-        <span class="rag-dot amber"></span>
-      </a>
-      <a class="sidebar-link" href="CONTROL_TOWER/app/oc-ipam.html">
-        <span class="icon">📋</span> OC &amp; IPAM Board
-        <span class="rag-dot amber"></span>
-      </a>
+      <div class="nav-group-header" data-group="ct">
+        <span class="sidebar-section-label">Control Tower</span>
+        <span class="nav-chevron">▾</span>
+      </div>
+      <div class="nav-items" id="group-ct">
+        <a class="sidebar-link" href="CONTROL_TOWER/app/index.html" data-label="Executive Summary">
+          <span class="icon">📊</span>
+          <span class="link-label">Executive Summary</span>
+          <span class="rag-dot green"></span>
+        </a>
+        <a class="sidebar-link" href="CONTROL_TOWER/app/finance.html" data-label="Finance">
+          <span class="icon">💰</span>
+          <span class="link-label">Finance</span>
+          <span class="rag-dot amber"></span>
+        </a>
+        <a class="sidebar-link" href="CONTROL_TOWER/app/customer.html" data-label="Customer & Market">
+          <span class="icon">👥</span>
+          <span class="link-label">Customer &amp; Market</span>
+          <span class="rag-dot green"></span>
+        </a>
+        <a class="sidebar-link" href="CONTROL_TOWER/app/otip.html" data-label="OTIP">
+          <span class="icon">📦</span>
+          <span class="link-label">OTIP</span>
+          <span class="rag-dot amber"></span>
+        </a>
+        <a class="sidebar-link" href="CONTROL_TOWER/app/plant.html" data-label="Plant & Value Stream">
+          <span class="icon">🏭</span>
+          <span class="link-label">Plant &amp; Value Stream</span>
+          <span class="rag-dot green"></span>
+        </a>
+        <a class="sidebar-link" href="CONTROL_TOWER/app/quality.html" data-label="Quality & COPQ">
+          <span class="icon">🎯</span>
+          <span class="link-label">Quality &amp; COPQ</span>
+          <span class="rag-dot red"></span>
+        </a>
+        <a class="sidebar-link" href="CONTROL_TOWER/app/supply.html" data-label="Supply & Inventory">
+          <span class="icon">🔗</span>
+          <span class="link-label">Supply &amp; Inventory</span>
+          <span class="rag-dot amber"></span>
+        </a>
+        <a class="sidebar-link" href="CONTROL_TOWER/app/oc-ipam.html" data-label="OC & IPAM Board">
+          <span class="icon">📋</span>
+          <span class="link-label">OC &amp; IPAM Board</span>
+          <span class="rag-dot amber"></span>
+        </a>
+      </div>
     </div>
 
+    <!-- War Room -->
     <div class="sidebar-section">
-      <div class="sidebar-section-label">War Room</div>
-      <a class="sidebar-link" href="WAR_ROOM/app/index.html">
-        <span class="icon">⚔️</span> War Room Hub
-      </a>
-      <a class="sidebar-link" href="WAR_ROOM/app/campaign-portfolio.html">
-        <span class="icon">🎯</span> Campaign Portfolio
-      </a>
-      <a class="sidebar-link" href="WAR_ROOM/app/customer-portfolio.html">
-        <span class="icon">👤</span> Customer Portfolio
-      </a>
-      <a class="sidebar-link" href="WAR_ROOM/app/plant-family.html">
-        <span class="icon">🔧</span> Plant / Family
-      </a>
-      <a class="sidebar-link" href="WAR_ROOM/app/issue-loss.html">
-        <span class="icon">🔥</span> Issue / Loss Hotspot
-      </a>
+      <div class="nav-group-header" data-group="wr">
+        <span class="sidebar-section-label">War Room</span>
+        <span class="nav-chevron">▾</span>
+      </div>
+      <div class="nav-items" id="group-wr">
+        <a class="sidebar-link" href="WAR_ROOM/app/index.html" data-label="War Room Hub">
+          <span class="icon">⚔️</span>
+          <span class="link-label">War Room Hub</span>
+        </a>
+        <a class="sidebar-link" href="WAR_ROOM/app/campaign-portfolio.html" data-label="Campaign Portfolio">
+          <span class="icon">🚀</span>
+          <span class="link-label">Campaign Portfolio</span>
+        </a>
+        <a class="sidebar-link" href="WAR_ROOM/app/customer-portfolio.html" data-label="Customer Portfolio">
+          <span class="icon">👤</span>
+          <span class="link-label">Customer Portfolio</span>
+        </a>
+        <a class="sidebar-link" href="WAR_ROOM/app/plant-family.html" data-label="Plant / Family">
+          <span class="icon">🔧</span>
+          <span class="link-label">Plant / Family</span>
+        </a>
+        <a class="sidebar-link" href="WAR_ROOM/app/issue-loss.html" data-label="Issue / Loss Hotspot">
+          <span class="icon">🔥</span>
+          <span class="link-label">Issue / Loss Hotspot</span>
+        </a>
+      </div>
     </div>
 
+    <!-- Templates PDF -->
     <div class="sidebar-section">
-      <div class="sidebar-section-label">Templates PDF</div>
-      <a class="sidebar-link" href="templates/Executive Summary - GSBB Control Tower.pdf" target="_blank">
-        <span class="icon">📄</span> Executive Summary
-      </a>
-      <a class="sidebar-link" href="templates/Customer &amp; Market Control - GSBB Control Tower.pdf" target="_blank">
-        <span class="icon">📄</span> Customer &amp; Market
-      </a>
-      <a class="sidebar-link" href="templates/Plant &amp; Value Stream - GSBB Control Tower.pdf" target="_blank">
-        <span class="icon">📄</span> Plant &amp; Value Stream
-      </a>
-      <a class="sidebar-link" href="templates/Quality &amp; COPQ - GSBB Control Tower.pdf" target="_blank">
-        <span class="icon">📄</span> Quality &amp; COPQ
-      </a>
-      <a class="sidebar-link" href="templates/Supply &amp; Inventory - GSBB Control Tower.pdf" target="_blank">
-        <span class="icon">📄</span> Supply &amp; Inventory
-      </a>
-      <a class="sidebar-link" href="templates/OC &amp; IPAM Control Board - GSBB Control Tower.pdf" target="_blank">
-        <span class="icon">📄</span> OC &amp; IPAM Board
-      </a>
+      <div class="nav-group-header closed" data-group="pdf">
+        <span class="sidebar-section-label">Templates PDF</span>
+        <span class="nav-chevron">▾</span>
+      </div>
+      <div class="nav-items closed" id="group-pdf" style="max-height:0">
+        <a class="sidebar-link" href="templates/Executive Summary - GSBB Control Tower.pdf" target="_blank" data-label="Executive Summary PDF">
+          <span class="icon">📄</span>
+          <span class="link-label">Executive Summary</span>
+        </a>
+        <a class="sidebar-link" href="templates/Customer &amp; Market Control - GSBB Control Tower.pdf" target="_blank" data-label="Customer & Market PDF">
+          <span class="icon">📄</span>
+          <span class="link-label">Customer &amp; Market</span>
+        </a>
+        <a class="sidebar-link" href="templates/Plant &amp; Value Stream - GSBB Control Tower.pdf" target="_blank" data-label="Plant & Value Stream PDF">
+          <span class="icon">📄</span>
+          <span class="link-label">Plant &amp; Value Stream</span>
+        </a>
+        <a class="sidebar-link" href="templates/Quality &amp; COPQ - GSBB Control Tower.pdf" target="_blank" data-label="Quality & COPQ PDF">
+          <span class="icon">📄</span>
+          <span class="link-label">Quality &amp; COPQ</span>
+        </a>
+        <a class="sidebar-link" href="templates/Supply &amp; Inventory - GSBB Control Tower.pdf" target="_blank" data-label="Supply & Inventory PDF">
+          <span class="icon">📄</span>
+          <span class="link-label">Supply &amp; Inventory</span>
+        </a>
+        <a class="sidebar-link" href="templates/OC &amp; IPAM Control Board - GSBB Control Tower.pdf" target="_blank" data-label="OC & IPAM Board PDF">
+          <span class="icon">📄</span>
+          <span class="link-label">OC &amp; IPAM Board</span>
+        </a>
+      </div>
     </div>
   </nav>
 
   <div class="sidebar-footer">
-    GSBB Control Tower v1.0<br>
-    <span id="sb-time"></span>
+    <span class="footer-text">GSBB v1.0 · <span id="sb-time"></span></span>
+    <span class="collapsed-icon" style="display:none">⬡</span>
   </div>
 </aside>
 
@@ -843,6 +970,66 @@ table.oc-table {
 </div><!-- /main -->
 
 <script>
+// ── NAVIGATION ────────────────────────────────────────────────────
+const sidebar  = document.getElementById('sidebar');
+const mainEl   = document.querySelector('.main');
+const toggle   = document.getElementById('nav-toggle');
+
+// Collapse / expand sidebar
+toggle.addEventListener('click', () => {
+  const collapsed = sidebar.classList.toggle('collapsed');
+  mainEl.classList.toggle('expanded', collapsed);
+  toggle.textContent = collapsed ? '›' : '‹';
+  toggle.title = collapsed ? 'Mở rộng menu' : 'Thu gọn menu';
+  localStorage.setItem('nav-collapsed', collapsed);
+});
+
+// Restore state
+if (localStorage.getItem('nav-collapsed') === 'true') {
+  sidebar.classList.add('collapsed');
+  mainEl.classList.add('expanded');
+  toggle.textContent = '›';
+}
+
+// Collapsible groups
+document.querySelectorAll('.nav-group-header').forEach(header => {
+  const groupId = header.dataset.group;
+  const items   = document.getElementById('group-' + groupId);
+  if (!items) return;
+
+  // Set initial max-height for open groups
+  if (!header.classList.contains('closed')) {
+    items.style.maxHeight = items.scrollHeight + 'px';
+  }
+
+  header.addEventListener('click', () => {
+    const closing = !header.classList.contains('closed');
+    header.classList.toggle('closed', closing);
+    items.classList.toggle('closed', closing);
+    items.style.maxHeight = closing ? '0' : items.scrollHeight + 'px';
+    localStorage.setItem('nav-group-' + groupId, closing ? 'closed' : 'open');
+  });
+
+  // Restore group state
+  const saved = localStorage.getItem('nav-group-' + groupId);
+  if (saved === 'closed' && !header.classList.contains('closed')) {
+    header.classList.add('closed');
+    items.classList.add('closed');
+    items.style.maxHeight = '0';
+  } else if (saved === 'open' && header.classList.contains('closed')) {
+    header.classList.remove('closed');
+    items.classList.remove('closed');
+    items.style.maxHeight = items.scrollHeight + 'px';
+  }
+});
+
+// Highlight active link
+const current = location.pathname.split('/').pop() || 'index.html';
+document.querySelectorAll('.sidebar-link').forEach(a => {
+  if (a.getAttribute('href') === current) a.classList.add('active');
+  else a.classList.remove('active');
+});
+
 // Clock
 function tick() {
   const now = new Date().toLocaleString('vi-VN', {

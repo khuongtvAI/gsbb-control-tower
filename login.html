@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSBB — Đăng nhập</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #071E0F;
+  --bg2:     #0D3B1E;
+  --bg3:     #0F4A25;
+  --accent:  #16a34a;
+  --accent2: #4ade80;
+  --text:    #e2f0e8;
+  --muted:   #86a896;
+  --border:  #1a4a2a;
+  --red:     #dc2626;
+}
+body {
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Background pattern */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(22,163,74,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.login-wrap {
+  width: 100%;
+  max-width: 400px;
+  padding: 1.5rem;
+  position: relative;
+}
+
+/* Brand */
+.brand {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.brand-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--accent2);
+}
+.brand-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.05em;
+}
+.brand-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+/* Card */
+.login-card {
+  background: #040E08;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 1.1rem;
+}
+label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(22,163,74,0.15);
+}
+input::placeholder { color: var(--muted); }
+
+.btn-login {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.75rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.15s, transform 0.1s;
+  letter-spacing: 0.03em;
+}
+.btn-login:hover  { background: #15803d; }
+.btn-login:active { transform: scale(0.98); }
+
+/* Error */
+.error-msg {
+  background: rgba(220,38,38,0.1);
+  border: 1px solid rgba(220,38,38,0.35);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+  display: none;
+}
+.error-msg.show { display: block; }
+
+/* Footer */
+.login-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.secure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(22,163,74,0.08);
+  border: 1px solid rgba(22,163,74,0.2);
+  color: var(--muted);
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  margin-top: 0.5rem;
+}
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <div class="brand">
+    <span class="brand-icon">⬡</span>
+    <div class="brand-name">GSBB</div>
+    <div class="brand-sub">Digital Command Center</div>
+  </div>
+
+  <div class="login-card">
+    <div class="card-title">Đăng nhập hệ thống</div>
+
+    <div class="error-msg" id="error-msg">
+      Tên đăng nhập hoặc mật khẩu không đúng. Vui lòng thử lại.
+    </div>
+
+    <form method="POST" action="/login">
+      <div class="form-group">
+        <label for="username">Tên đăng nhập</label>
+        <input type="text" id="username" name="username"
+               placeholder="admin / ceo / pmo" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Mật khẩu</label>
+        <input type="password" id="password" name="password"
+               placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn-login">Đăng nhập →</button>
+    </form>
+  </div>
+
+  <div class="login-footer">
+    <div>GSBB Control Tower &amp; War Room · v1.0 · 2026</div>
+    <div class="secure-badge">🔒 Hệ thống nội bộ — Không chia sẻ thông tin đăng nhập</div>
+  </div>
+
+</div>
+
+<script>
+  // Hiện lỗi nếu URL có ?error=1
+  if (new URLSearchParams(location.search).get('error') === '1') {
+    document.getElementById('error-msg').classList.add('show');
+  }
+  // Focus vào ô username
+  document.getElementById('username').focus();
+</script>
+</body>
+</html>
