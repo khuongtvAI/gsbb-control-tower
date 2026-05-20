@@ -1,7 +1,19 @@
 node_modules/
 .env
 .env.*
-.claude/
+# .claude — chỉ exclude data nhạy cảm, giữ lại commands/
+.claude/projects/
+.claude/sessions/
+.claude/cache/
+.claude/backups/
+.claude/telemetry/
+.claude/shell-snapshots/
+.claude/session-env/
+.claude/file-history/
+.claude/ide/
+.claude/plans/
+.claude/.credentials.json
+.claude/*.json
 memory/
 *.pptx
 server.js
