@@ -2,8 +2,71 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Quality & COPQ — GSBB Control Tower</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quality Issues 2026 — GSBB Control Tower</title>
 <link rel="stylesheet" href="assets/ct-shared.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+/* ── Extra Quality-page styles ───────────────────────────────── */
+.kpi-unit { font-size:0.72rem; color:var(--muted); margin-top:0.15rem; }
+.kpi-delta { font-size:0.72rem; margin-top:0.2rem; font-weight:600; }
+.kpi-delta.up   { color:var(--red); }
+.kpi-delta.down { color:var(--green); }
+.kpi-delta.neu  { color:var(--muted); }
+
+.section-block { background:var(--card); border-radius:10px; padding:1.25rem 1.5rem; margin-bottom:1.25rem; box-shadow:0 1px 3px rgba(0,0,0,.06); border:1px solid var(--border); }
+.section-block h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:1rem; padding-bottom:0.5rem; border-bottom:1px solid var(--border); }
+
+.charts-2col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; }
+.charts-3col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; }
+@media(max-width:900px){ .charts-2col,.charts-3col { grid-template-columns:1fr; } }
+
+canvas { max-height:260px; }
+
+/* ── Open issues table ───────────────────────────────────────── */
+.issues-table { width:100%; border-collapse:collapse; font-size:0.78rem; }
+.issues-table th { background:#f0f7f2; color:var(--text); font-weight:700; font-size:0.7rem; text-transform:uppercase; letter-spacing:.04em; padding:0.55rem 0.75rem; border-bottom:2px solid var(--border); white-space:nowrap; }
+.issues-table td { padding:0.5rem 0.75rem; border-bottom:1px solid #e8f5ec; vertical-align:middle; }
+.issues-table tr:hover td { background:#f8fdf9; }
+.issues-table tr:last-child td { border-bottom:none; }
+
+.badge { display:inline-block; padding:0.15rem 0.55rem; border-radius:9999px; font-size:0.65rem; font-weight:700; white-space:nowrap; }
+.badge-a   { background:#fee2e2; color:#b91c1c; }
+.badge-b   { background:#fef3c7; color:#92400e; }
+.badge-c   { background:#d1fae5; color:#065f46; }
+.badge-done  { background:#d1fae5; color:#065f46; }
+.badge-open  { background:#fef3c7; color:#92400e; }
+.badge-late  { background:#fee2e2; color:#b91c1c; }
+.badge-ncr   { background:#e0e7ff; color:#3730a3; }
+.badge-car   { background:#ede9fe; color:#5b21b6; }
+.badge-8d    { background:#dbeafe; color:#1d4ed8; }
+
+.overdue-row td { background:#fff7f7; }
+.overdue-row:hover td { background:#fee2e2 !important; }
+
+/* ── Summary insight box ─────────────────────────────────────── */
+.insight-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1rem; margin-bottom:1.25rem; }
+.insight-card { background:linear-gradient(135deg,#071E0F,#0f3d20); color:white; border-radius:10px; padding:1rem 1.25rem; position:relative; overflow:hidden; }
+.insight-card::before { content:''; position:absolute; top:-20px; right:-20px; width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.05); }
+.insight-card .ic-label { font-size:0.68rem; color:#86efac; text-transform:uppercase; letter-spacing:.05em; }
+.insight-card .ic-value { font-size:1.6rem; font-weight:800; margin:0.3rem 0; }
+.insight-card .ic-sub { font-size:0.72rem; color:#9ca3af; line-height:1.4; }
+.insight-card.warn { background:linear-gradient(135deg,#7c2d12,#b45309); }
+.insight-card.alert { background:linear-gradient(135deg,#7f1d1d,#b91c1c); }
+.insight-card.ok    { background:linear-gradient(135deg,#064e3b,#065f46); }
+
+.loading { text-align:center; padding:3rem; color:var(--muted); font-size:0.9rem; }
+.error-box { background:#fee2e2; color:#b91c1c; border-radius:8px; padding:1rem; font-size:0.85rem; }
+
+.table-scroll { overflow-x:auto; }
+.num-cell { text-align:right; font-variant-numeric:tabular-nums; }
+.copq-cell { color:#b91c1c; font-weight:600; }
+.overdue-cell { color:#b91c1c; font-weight:700; }
+
+.filter-bar { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
+.filter-bar label { font-size:0.72rem; font-weight:600; color:var(--muted); }
+.filter-bar select { font-size:0.78rem; padding:0.3rem 0.6rem; border:1px solid var(--border); border-radius:6px; background:white; color:var(--text); }
+</style>
 </head>
 <body>
 <header>
@@ -22,68 +85,429 @@
     <a href="oc-ipam.html">8. OC &amp; IPAM</a>
   </nav>
 </header>
+
 <main>
+  <!-- Hero -->
   <div class="page-hero">
     <span class="icon">🎯</span>
     <div>
-      <h2>Quality &amp; COPQ</h2>
-      <p>Tỷ lệ lỗi · COPQ · Top defects · Customer complaints · Scrap — Owner: QA Lead</p>
+      <h2>Quality Issues 2026 — Báo cáo tổng hợp NCR / CAR / 8D</h2>
+      <p>Tỷ lệ lỗi · COPQ · Overdue · Top defects · Bộ phận chịu trách nhiệm — <span id="hero-period">Đang tải…</span></p>
+    </div>
+    <div style="margin-left:auto;text-align:right;font-size:0.72rem;color:#9ca3af">
+      Nguồn: Supabase · quality_issue_tracking<br>
+      <span id="updated-time">—</span>
     </div>
   </div>
 
-  <div class="kpi-grid">
-    <div class="kpi-card red">
-      <div class="kpi-label">COPQ</div>
-      <div class="kpi-value">—</div>
-      <div class="kpi-sub">tỷ VNĐ · tháng này</div>
-    </div>
-    <div class="kpi-card amber">
-      <div class="kpi-label">Defect Rate</div>
-      <div class="kpi-value">—</div>
-      <div class="kpi-sub">% · target &lt; 0.5%</div>
-    </div>
-    <div class="kpi-card red">
-      <div class="kpi-label">Customer Complaints</div>
-      <div class="kpi-value">—</div>
-      <div class="kpi-sub">case · tuần này</div>
-    </div>
-    <div class="kpi-card amber">
-      <div class="kpi-label">Scrap Rate</div>
-      <div class="kpi-value">—</div>
-      <div class="kpi-sub">% nguyên liệu bỏ</div>
-    </div>
-    <div class="kpi-card green">
-      <div class="kpi-label">First Pass Yield</div>
-      <div class="kpi-value">—</div>
-      <div class="kpi-sub">% pass lần đầu</div>
-    </div>
-    <div class="kpi-card blue">
-      <div class="kpi-label">Rework Rate</div>
-      <div class="kpi-value">—</div>
-      <div class="kpi-sub">% sản phẩm làm lại</div>
-    </div>
-  </div>
+  <!-- Loading state -->
+  <div id="loading-box" class="loading">⏳ Đang tải dữ liệu từ Supabase…</div>
+  <div id="error-box" class="error-box" style="display:none"></div>
 
-  <div class="placeholder-box">
-    <div class="placeholder-icon">🔬</div>
-    <div class="placeholder-title">Quality Dashboard — COPQ &amp; Defect Analysis</div>
-    <div class="placeholder-desc">
-      Biểu đồ: COPQ waterfall theo danh mục (scrap/rework/warranty/complaint), Defect Pareto, Control chart lỗi theo dây chuyền, Customer complaint trend.
+  <!-- Main content (hidden until loaded) -->
+  <div id="main-content" style="display:none">
+
+    <!-- ── Insight summary cards ── -->
+    <div class="insight-grid" id="insight-grid"></div>
+
+    <!-- ── KPI cards ── -->
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- ── Row 1: Trend + Level claim ── -->
+    <div class="charts-2col">
+      <div class="section-block">
+        <h3>📈 Xu hướng theo tháng — Số case & COPQ</h3>
+        <canvas id="chart-trend"></canvas>
+      </div>
+      <div class="section-block">
+        <h3>🔴 Phân bố Level Claim (A / B / C)</h3>
+        <canvas id="chart-level"></canvas>
+      </div>
     </div>
-    <div class="placeholder-tags">
-      <span class="placeholder-tag">COPQ Waterfall</span>
-      <span class="placeholder-tag">Defect Pareto</span>
-      <span class="placeholder-tag">Control Chart</span>
-      <span class="placeholder-tag">Complaint Trend</span>
-      <span class="placeholder-tag">Scrap Analysis</span>
+
+    <!-- ── Row 2: Bo phan + Phan loai ── -->
+    <div class="charts-2col">
+      <div class="section-block">
+        <h3>🏭 Top Bộ phận — Số issue & Chi phí thiệt hại</h3>
+        <canvas id="chart-bophan"></canvas>
+      </div>
+      <div class="section-block">
+        <h3>📋 Loại issue (NCR / CAR / 8D / A3) & Bản chất lỗi</h3>
+        <canvas id="chart-phanloai"></canvas>
+      </div>
     </div>
-    <div class="data-note">
-      Source: <code>DATA_LAYER/quality/quality_data.json</code>
-      · Input: <code>20260506_QC_Du_Lieu_Loi_Thang11_2025.xlsx</code>
+
+    <!-- ── Row 3: Ban chat + Tinh trang ── -->
+    <div class="charts-2col">
+      <div class="section-block">
+        <h3>🔍 Bản chất nguyên nhân gốc rễ</h3>
+        <canvas id="chart-banchat"></canvas>
+      </div>
+      <div class="section-block">
+        <h3>✅ Tình trạng xử lý issue</h3>
+        <canvas id="chart-tinhtrang"></canvas>
+      </div>
     </div>
-  </div>
-  <div class="meta">Source: QA System · MES · Updated: <span id="ts">—</span></div>
+
+    <!-- ── Open / Overdue issues table ── -->
+    <div class="section-block">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+        <h3 style="margin:0;border:none;padding:0">⚠️ Issues đang xử lý & quá hạn</h3>
+        <span id="open-count-badge" class="badge badge-late" style="font-size:0.75rem;padding:0.25rem 0.75rem"></span>
+      </div>
+      <div class="filter-bar">
+        <label>Lọc:</label>
+        <select id="filter-bophan" onchange="applyFilter()"><option value="">Tất cả bộ phận</option></select>
+        <select id="filter-level" onchange="applyFilter()">
+          <option value="">Tất cả level</option>
+          <option value="A">Level A</option>
+          <option value="B">Level B</option>
+          <option value="C">Level C</option>
+        </select>
+        <select id="filter-tinh" onchange="applyFilter()">
+          <option value="open">Chưa hoàn thành</option>
+          <option value="">Tất cả</option>
+          <option value="done">Đã hoàn thành</option>
+        </select>
+      </div>
+      <div class="table-scroll">
+        <table class="issues-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Mã NCR/CAR</th>
+              <th>Tháng</th>
+              <th>Bộ phận</th>
+              <th>Level</th>
+              <th>Khách hàng / Vendor</th>
+              <th class="num-cell">NG</th>
+              <th class="num-cell">Chi phí (VNĐ)</th>
+              <th>Tình trạng</th>
+              <th>Deadline</th>
+              <th>Ngày TL</th>
+              <th class="num-cell">Quá hạn</th>
+              <th>PIC</th>
+            </tr>
+          </thead>
+          <tbody id="issues-tbody"></tbody>
+        </table>
+      </div>
+      <div id="table-footer" style="font-size:0.72rem;color:var(--muted);text-align:right;margin-top:0.5rem"></div>
+    </div>
+
+  </div><!-- /main-content -->
 </main>
-<script>document.getElementById('ts').textContent = new Date().toLocaleString('vi-VN');</script>
+
+<script>
+// ── Config ────────────────────────────────────────────────────
+const SB_URL  = 'https://evlrudvtoblhkfjdmmvs.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2bHJ1ZHZ0b2JsaGtmamRtbXZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNDUyMjcsImV4cCI6MjA5NDgyMTIyN30.wKv8zA43uqiqV-VnHl823TF-PrdN4ta6Ib1J1ovk8uM';
+
+const MONTH_NAMES = ['','T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+const GREEN  = '#0B5C2E';
+const GREEN2 = '#16a34a';
+const AMBER  = '#f59e0b';
+const RED    = '#dc2626';
+const BLUE   = '#2563eb';
+const PURPLE = '#7c3aed';
+const PALETTE = [GREEN,'#1d8e4a','#2faa60','#41c577','#16a34a',BLUE,PURPLE,AMBER,RED,'#6b7280'];
+
+// ── Helpers ───────────────────────────────────────────────────
+const fmtVND  = v => v >= 1e9 ? (v/1e9).toFixed(2)+' tỷ' : v >= 1e6 ? (v/1e6).toFixed(0)+' tr' : v.toLocaleString('vi-VN');
+const fmtPct  = v => (v*100).toFixed(2)+'%';
+const groupBy = (arr, key) => arr.reduce((a,r) => { const k = r[key]||'(trống)'; (a[k]=a[k]||[]).push(r); return a; }, {});
+const sumBy   = (arr, key) => arr.reduce((s,r) => s + (parseFloat(r[key])||0), 0);
+const isDone  = r => /hoàn thành/i.test(r.tinh_trang||'');
+
+// ── Fetch all data ────────────────────────────────────────────
+async function fetchData() {
+  const headers = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON, 'Range': '0-1999' };
+  const res = await fetch(SB_URL+'/rest/v1/quality_issue_tracking?select=*&order=ngay_phat_hanh.desc&limit=2000', { headers });
+  if (!res.ok) throw new Error('HTTP '+res.status+' — '+await res.text());
+  return res.json();
+}
+
+// ── State ─────────────────────────────────────────────────────
+let ALL_DATA = [];
+
+// ── Main init ─────────────────────────────────────────────────
+async function init() {
+  try {
+    ALL_DATA = await fetchData();
+    document.getElementById('loading-box').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('updated-time').textContent = 'Cập nhật: '+new Date().toLocaleString('vi-VN');
+
+    const months = [...new Set(ALL_DATA.map(r=>r.month).filter(Boolean))].sort((a,b)=>a-b);
+    const periodStr = months.length ? 'Tháng '+months[0]+' – '+months[months.length-1]+' / 2026 ('+ALL_DATA.length+' issues)' : ALL_DATA.length+' issues';
+    document.getElementById('hero-period').textContent = periodStr;
+
+    renderInsights(ALL_DATA);
+    renderKPIs(ALL_DATA);
+    renderTrendChart(ALL_DATA);
+    renderLevelChart(ALL_DATA);
+    renderBoPhanChart(ALL_DATA);
+    renderPhanLoaiChart(ALL_DATA);
+    renderBanChatChart(ALL_DATA);
+    renderTinhTrangChart(ALL_DATA);
+    populateFilters(ALL_DATA);
+    applyFilter();
+  } catch(e) {
+    document.getElementById('loading-box').style.display = 'none';
+    const eb = document.getElementById('error-box');
+    eb.style.display = 'block';
+    eb.textContent = '❌ Lỗi tải dữ liệu: '+e.message;
+  }
+}
+
+// ── Insight summary cards ─────────────────────────────────────
+function renderInsights(data) {
+  const totalCOPQ    = sumBy(data, 'chi_phi_thiet_hai');
+  const totalBoiHoan = sumBy(data, 'so_tien_boi_hoan');
+  const openItems    = data.filter(r => !isDone(r));
+  const overdueItems = data.filter(r => !isDone(r) && parseFloat(r.so_ngay_qua_han||0) > 0);
+  const levelA       = data.filter(r => r.level_claim === 'A').length;
+  const avgDefect    = data.filter(r=>r.ty_le_loi>0).length > 0
+    ? sumBy(data.filter(r=>r.ty_le_loi>0),'ty_le_loi') / data.filter(r=>r.ty_le_loi>0).length
+    : 0;
+
+  const cards = [
+    { label:'Tổng COPQ 2026', value: fmtVND(totalCOPQ), sub:'Chi phí thiệt hại toàn bộ', cls: totalCOPQ>5e9?'alert':'warn' },
+    { label:'Bồi hoàn từ đối tác', value: fmtVND(totalBoiHoan), sub:'Đã thu hồi được', cls:'ok' },
+    { label:'Issues đang mở', value: openItems.length, sub:'Chưa hoàn thành xử lý', cls: openItems.length>20?'alert':'warn' },
+    { label:'Quá hạn phản hồi', value: overdueItems.length, sub:'Cần xử lý ngay', cls: overdueItems.length>5?'alert':'warn' },
+    { label:'Level A (nghiêm trọng)', value: levelA, sub:'Khiếu nại mức cao nhất', cls: levelA>10?'alert':'warn' },
+    { label:'Tỷ lệ lỗi TB', value: fmtPct(avgDefect), sub:'NG / số kiểm tra', cls: avgDefect>0.01?'warn':'ok' },
+  ];
+  document.getElementById('insight-grid').innerHTML = cards.map(c=>`
+    <div class="insight-card ${c.cls}">
+      <div class="ic-label">${c.label}</div>
+      <div class="ic-value">${c.value}</div>
+      <div class="ic-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+// ── KPI cards ─────────────────────────────────────────────────
+function renderKPIs(data) {
+  const done    = data.filter(isDone).length;
+  const total   = data.length;
+  const donePct = total ? Math.round(done/total*100) : 0;
+  const totalNG = sumBy(data,'so_luong_ng');
+  const totalKT = sumBy(data,'so_luong_kiem_tra');
+  const overallDefect = totalKT ? totalNG/totalKT : 0;
+
+  const monthGroups = groupBy(data, 'month');
+  const months = Object.keys(monthGroups).map(Number).filter(Boolean).sort((a,b)=>a-b);
+  const latestMonth = months[months.length-1];
+  const prevMonth   = months[months.length-2];
+  const latestCount = latestMonth ? monthGroups[latestMonth]?.length||0 : 0;
+  const prevCount   = prevMonth   ? monthGroups[prevMonth]?.length||0   : 0;
+  const monthDelta  = prevCount ? latestCount - prevCount : 0;
+
+  const cards = [
+    { label:'Tổng issue 2026', value: total, sub:'toàn bộ NCR/CAR/8D/A3', cls:'', delta: monthDelta ? (monthDelta>0?'↑ +'+monthDelta+' so T'+(latestMonth-1):'↓ '+monthDelta+' so T'+(latestMonth-1)) : '', deltaDir: monthDelta>0?'up':'down' },
+    { label:'Hoàn thành', value: done+' / '+total, sub: donePct+'% đã đóng', cls:'green', delta:'', deltaDir:'' },
+    { label:'Tổng NG (pcs)', value: totalNG.toLocaleString('vi-VN'), sub:'sản phẩm không đạt', cls:'amber', delta:'', deltaDir:'' },
+    { label:'Defect Rate TB', value: fmtPct(overallDefect), sub:'target < 0.5%', cls: overallDefect>0.005?'red':'green', delta:'', deltaDir:'' },
+    { label:'Tháng '+MONTH_NAMES[latestMonth||0]+' — Issues', value: latestCount, sub:'issue mới nhất', cls:'blue', delta:'', deltaDir:'' },
+    { label:'Chưa xử lý', value: total-done, sub:'cần theo dõi', cls: (total-done)>20?'red':'amber', delta:'', deltaDir:'' },
+  ];
+  document.getElementById('kpi-grid').innerHTML = cards.map(c=>`
+    <div class="kpi-card ${c.cls}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}</div>
+      <div class="kpi-sub">${c.sub}</div>
+      ${c.delta ? `<div class="kpi-delta ${c.deltaDir}">${c.delta}</div>` : ''}
+    </div>`).join('');
+}
+
+// ── Chart 1: Trend ────────────────────────────────────────────
+function renderTrendChart(data) {
+  const monthMap = {};
+  data.forEach(r => {
+    if (!r.month) return;
+    if (!monthMap[r.month]) monthMap[r.month] = { count:0, copq:0 };
+    monthMap[r.month].count++;
+    monthMap[r.month].copq += parseFloat(r.chi_phi_thiet_hai)||0;
+  });
+  const months = Object.keys(monthMap).map(Number).sort((a,b)=>a-b);
+  const counts = months.map(m => monthMap[m].count);
+  const copqs  = months.map(m => +(monthMap[m].copq/1e6).toFixed(1));
+  new Chart(document.getElementById('chart-trend'), {
+    data: {
+      labels: months.map(m=>MONTH_NAMES[m]),
+      datasets: [
+        { type:'bar', label:'Số issue', data:counts, backgroundColor:GREEN+'cc', yAxisID:'y', borderRadius:4 },
+        { type:'line', label:'COPQ (triệu VNĐ)', data:copqs, borderColor:RED, backgroundColor:RED+'22', yAxisID:'y2', tension:0.3, pointRadius:4, pointBackgroundColor:RED }
+      ]
+    },
+    options: { responsive:true, interaction:{ mode:'index' }, plugins:{ legend:{ labels:{ font:{ size:11 } } } },
+      scales: {
+        y:  { beginAtZero:true, title:{ display:true, text:'Số issue', font:{size:10} } },
+        y2: { beginAtZero:true, position:'right', title:{ display:true, text:'COPQ (tr.VNĐ)', font:{size:10} }, grid:{ drawOnChartArea:false } }
+      }
+    }
+  });
+}
+
+// ── Chart 2: Level Claim ──────────────────────────────────────
+function renderLevelChart(data) {
+  const groups = groupBy(data, 'level_claim');
+  const levels = Object.keys(groups).sort();
+  const levelColors = { A:RED, B:AMBER, C:GREEN2, '(trống)':'#9ca3af' };
+  new Chart(document.getElementById('chart-level'), {
+    type:'doughnut',
+    data: {
+      labels: levels.map(l=>l==='(trống)'?'Chưa phân loại':'Level '+l+' ('+groups[l].length+')'),
+      datasets:[{ data: levels.map(l=>groups[l].length), backgroundColor: levels.map(l=>levelColors[l]||BLUE), borderWidth:2, borderColor:'white' }]
+    },
+    options: { responsive:true, plugins:{ legend:{ position:'right', labels:{ font:{size:11} } },
+      tooltip:{ callbacks:{ label: ctx => ' '+ctx.label+': '+Math.round(ctx.parsed/data.length*100)+'% ('+ctx.parsed+' case)' } }
+    } }
+  });
+}
+
+// ── Chart 3: Bộ phận ─────────────────────────────────────────
+function renderBoPhanChart(data) {
+  const groups = groupBy(data,'bo_phan');
+  const sorted = Object.entries(groups).sort((a,b)=>b[1].length-a[1].length).slice(0,10);
+  const labels = sorted.map(([k])=>k);
+  const counts = sorted.map(([,v])=>v.length);
+  const copqs  = sorted.map(([,v])=>+(sumBy(v,'chi_phi_thiet_hai')/1e6).toFixed(1));
+  new Chart(document.getElementById('chart-bophan'), {
+    data: {
+      labels,
+      datasets:[
+        { type:'bar', label:'Số issue', data:counts, backgroundColor:GREEN+'cc', borderRadius:4, yAxisID:'y' },
+        { type:'bar', label:'COPQ (tr.VNĐ)', data:copqs, backgroundColor:RED+'99', borderRadius:4, yAxisID:'y2' }
+      ]
+    },
+    options: { indexAxis:'y', responsive:true, plugins:{ legend:{ labels:{ font:{size:10} } } },
+      scales:{
+        y:  { ticks:{ font:{size:10} } },
+        y2: { position:'right', beginAtZero:true, title:{ display:true, text:'COPQ (tr.VNĐ)', font:{size:10} }, grid:{ drawOnChartArea:false } }
+      }
+    }
+  });
+}
+
+// ── Chart 4: Phân loại ────────────────────────────────────────
+function renderPhanLoaiChart(data) {
+  const groups = groupBy(data,'phan_loai');
+  const plColors = { NCR:BLUE, CAR:PURPLE, '8D':AMBER, A3:GREEN2, '(trống)':'#9ca3af' };
+  const keys = Object.keys(groups).sort();
+  new Chart(document.getElementById('chart-phanloai'), {
+    type:'doughnut',
+    data: {
+      labels: keys.map(k=>k+' ('+groups[k].length+')'),
+      datasets:[{ data: keys.map(k=>groups[k].length), backgroundColor: keys.map(k=>plColors[k]||BLUE), borderWidth:2, borderColor:'white' }]
+    },
+    options:{ responsive:true, plugins:{ legend:{ position:'right', labels:{ font:{size:11} } } } }
+  });
+}
+
+// ── Chart 5: Bản chất ─────────────────────────────────────────
+function renderBanChatChart(data) {
+  const catCount = {};
+  data.forEach(r => {
+    const val = (r.ban_chat||'').trim();
+    if (!val || val.length > 200) return;
+    val.split(/[,;\/，]+/).forEach(part => {
+      const k = part.trim();
+      if (k && k.length < 50) catCount[k] = (catCount[k]||0)+1;
+    });
+  });
+  const sorted = Object.entries(catCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  if (!sorted.length) return;
+  new Chart(document.getElementById('chart-banchat'), {
+    type:'bar',
+    data: {
+      labels: sorted.map(([k])=>k),
+      datasets:[{ label:'Số lần xuất hiện', data: sorted.map(([,v])=>v),
+        backgroundColor: PALETTE.slice(0,sorted.length), borderRadius:4 }]
+    },
+    options:{ indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true } } }
+  });
+}
+
+// ── Chart 6: Tình trạng ───────────────────────────────────────
+function renderTinhTrangChart(data) {
+  const groups = groupBy(data,'tinh_trang');
+  const keys = Object.keys(groups).sort((a,b)=>groups[b].length-groups[a].length);
+  const colors = keys.map(k => /hoàn thành/i.test(k) ? GREEN : /đang/i.test(k) ? AMBER : RED);
+  new Chart(document.getElementById('chart-tinhtrang'), {
+    type:'bar',
+    data: {
+      labels: keys.map(k=>(k==='(trống)'?'Chưa cập nhật':k)),
+      datasets:[{ data: keys.map(k=>groups[k].length), backgroundColor: colors, borderRadius:4 }]
+    },
+    options:{ responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true }, x:{ ticks:{ font:{size:9}, maxRotation:30 } } } }
+  });
+}
+
+// ── Filter & table ────────────────────────────────────────────
+function populateFilters(data) {
+  const boPhanSet = [...new Set(data.map(r=>r.bo_phan||'').filter(Boolean))].sort();
+  const sel = document.getElementById('filter-bophan');
+  boPhanSet.forEach(bp => { const o=document.createElement('option'); o.value=bp; o.textContent=bp; sel.appendChild(o); });
+}
+
+function applyFilter() {
+  const bpFilter  = document.getElementById('filter-bophan').value;
+  const lvFilter  = document.getElementById('filter-level').value;
+  const stFilter  = document.getElementById('filter-tinh').value;
+
+  let filtered = ALL_DATA;
+  if (bpFilter) filtered = filtered.filter(r=>r.bo_phan===bpFilter);
+  if (lvFilter) filtered = filtered.filter(r=>r.level_claim===lvFilter);
+  if (stFilter==='open')  filtered = filtered.filter(r=>!isDone(r));
+  if (stFilter==='done')  filtered = filtered.filter(r=>isDone(r));
+
+  filtered = filtered.slice().sort((a,b) => {
+    const aOD = parseFloat(a.so_ngay_qua_han||0);
+    const bOD = parseFloat(b.so_ngay_qua_han||0);
+    if (bOD !== aOD) return bOD - aOD;
+    return (b.month||0)-(a.month||0);
+  });
+
+  const openCount = filtered.filter(r=>!isDone(r)).length;
+  document.getElementById('open-count-badge').textContent = openCount + ' chưa xử lý';
+
+  const tbody = document.getElementById('issues-tbody');
+  tbody.innerHTML = filtered.slice(0,100).map((r,i) => {
+    const overdue = parseFloat(r.so_ngay_qua_han||0);
+    const isOver  = overdue > 0 && !isDone(r);
+    const lvBadge = r.level_claim ? `<span class="badge badge-${(r.level_claim||'').toLowerCase()}">${r.level_claim}</span>` : '—';
+    const plBadge = r.phan_loai ? `<span class="badge badge-${(r.phan_loai||'').toLowerCase()}">${r.phan_loai}</span>` : '—';
+    const stBadge = isDone(r)
+      ? `<span class="badge badge-done">Hoàn thành</span>`
+      : isOver
+        ? `<span class="badge badge-late">Quá hạn</span>`
+        : `<span class="badge badge-open">${r.tinh_trang||'Đang xử lý'}</span>`;
+    const copq = parseFloat(r.chi_phi_thiet_hai||0);
+    return `<tr class="${isOver?'overdue-row':''}">
+      <td>${i+1}</td>
+      <td><strong>${r.ma_so_ncr||'—'}</strong></td>
+      <td>T${r.month||'?'} ${r.week||''}</td>
+      <td>${r.bo_phan||'—'}</td>
+      <td>${lvBadge} ${plBadge}</td>
+      <td>${r.khach_hang_vender||'—'}</td>
+      <td class="num-cell">${(r.so_luong_ng||0).toLocaleString('vi-VN')}</td>
+      <td class="num-cell ${copq>0?'copq-cell':''}">${copq>0?fmtVND(copq):'—'}</td>
+      <td>${stBadge}</td>
+      <td>${r.deadline_tra_loi||'—'}</td>
+      <td>${r.ngay_tra_loi_thuc_te||'—'}</td>
+      <td class="num-cell ${isOver?'overdue-cell':''}">${overdue>0?'+'+overdue+'ngày':overdue<0?overdue+'ngày':'—'}</td>
+      <td style="font-size:0.72rem;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(r.pic||'').replace(/"/g,'')}">${r.pic||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('table-footer').textContent =
+    'Hiển thị '+Math.min(filtered.length,100)+' / '+filtered.length+' issues'+(filtered.length>100?' (giới hạn 100 dòng)':'');
+}
+
+// ── Run ───────────────────────────────────────────────────────
+init();
+</script>
 </body>
 </html>
