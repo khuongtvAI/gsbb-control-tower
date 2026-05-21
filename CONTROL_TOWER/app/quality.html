@@ -318,7 +318,7 @@ function populateQuarterSelect(year) {
   const sel = document.getElementById('mf-quarter');
   sel.innerHTML = '<option value="">Tất cả quý</option>';
   const rows = year ? LIST_WEEK_DATA.filter(r=>r.years===year) : LIST_WEEK_DATA;
-  const qs = [...new Set(rows.map(r=>r.months ? getQuarter(r.months) : null).filter(Boolean))].sort((a,b)=>a-b);
+  const qs = [...new Set(rows.map(r=>r.quarter).filter(Boolean))].sort((a,b)=>a-b);
   qs.forEach(q => {
     const o = document.createElement('option'); o.value = q; o.textContent = 'Q'+q; sel.appendChild(o);
   });
@@ -329,7 +329,7 @@ function populateWeekSelect(year, quarter) {
   sel.innerHTML = '<option value="">Tất cả tuần</option>';
   let rows = LIST_WEEK_DATA;
   if (year)    rows = rows.filter(r=>r.years===year);
-  if (quarter) rows = rows.filter(r=>r.months && getQuarter(r.months)===quarter);
+  if (quarter) rows = rows.filter(r=>r.quarter===quarter);
   [...rows].sort((a,b)=>a.weeks-b.weeks).forEach(r => {
     const o = document.createElement('option');
     o.value = r.weeks;
@@ -408,11 +408,12 @@ function applyMainFilter() {
     data = data.filter(r => parseWeekNum(r.week) === FILTER_STATE.week);
   } else if (FILTER_STATE.quarter && FILTER_STATE.year) {
     const wNums = LIST_WEEK_DATA
-      .filter(r => r.years === FILTER_STATE.year && r.months && getQuarter(r.months) === FILTER_STATE.quarter)
+      .filter(r => r.years === FILTER_STATE.year && r.quarter === FILTER_STATE.quarter)
       .map(r => r.weeks);
     data = data.filter(r => wNums.includes(parseWeekNum(r.week)));
   } else if (FILTER_STATE.quarter) {
-    data = data.filter(r => r.month && getQuarter(parseInt(r.month)) === FILTER_STATE.quarter);
+    const wNums = LIST_WEEK_DATA.filter(r => r.quarter === FILTER_STATE.quarter).map(r => r.weeks);
+    data = data.filter(r => wNums.includes(parseWeekNum(r.week)));
   } else if (FILTER_STATE.year) {
     const wNums = LIST_WEEK_DATA.filter(r => r.years === FILTER_STATE.year).map(r => r.weeks);
     data = data.filter(r => wNums.includes(parseWeekNum(r.week)));
