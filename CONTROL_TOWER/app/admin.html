@@ -200,7 +200,7 @@
   <!-- ── User list ── -->
   <div class="section-block">
     <div class="section-head">
-      <h3>Danh sách Users</h3>
+      <h3>Danh sách Users <span id="user-count-badge" style="font-size:0.7rem;font-weight:500;color:var(--muted);text-transform:none;letter-spacing:0"></span></h3>
       <div class="toolbar">
         <input type="text" id="user-search2" placeholder="🔍 Tìm user..." oninput="renderUserTable(true)">
         <label><input type="checkbox" id="show-inactive2" onchange="renderUserTable(true)"> Hiển thị inactive</label>
@@ -373,11 +373,15 @@ async function init() {
     ACCESS_MAP = {};
     access.forEach(r => { ACCESS_MAP[`${r.user_id}_${r.function_id}`] = r.is_active; });
 
+    console.log('[Admin] Loaded', ALL_USERS.length, 'users,', ALL_USERS.filter(u=>u.is_active).length, 'active');
     renderStats();
     renderMatrix();
-    renderUserTable();
+    renderUserTable(true);
     renderPermUsers();
   } catch(e) {
+    console.error('[Admin] init error:', e);
+    const tbody = document.getElementById('user-tbody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--red)">❌ Lỗi tải dữ liệu: ${e.message}</td></tr>`;
     alert('Lỗi tải dữ liệu: ' + e.message);
   }
 }
@@ -568,10 +572,17 @@ function renderUserTable(resetPage) {
       </td>
     </tr>`).join('');
 
+  // Update section badge
+  const active = ALL_USERS.filter(u=>u.is_active).length;
+  const badge = document.getElementById('user-count-badge');
+  if (badge) badge.textContent = ALL_USERS.length ? `(${active} active / ${ALL_USERS.length} total)` : '';
+
   // Pagination controls
   renderUserPagination(totalPages, filtered.length);
-  document.getElementById('user-table-footer').textContent =
-    `Trang ${USER_PAGE}/${totalPages} · Hiển thị ${start+1}–${Math.min(start+PAGE_SIZE, filtered.length)} / ${filtered.length} users`;
+  const endIdx = Math.min(start + PAGE_SIZE, filtered.length);
+  document.getElementById('user-table-footer').textContent = filtered.length
+    ? `Trang ${USER_PAGE}/${totalPages} · Hiển thị ${start+1}–${endIdx} / ${filtered.length} users`
+    : ALL_USERS.length ? 'Không tìm thấy user phù hợp' : 'Đang tải...';
 }
 
 function renderUserPagination(totalPages, total) {
@@ -603,6 +614,7 @@ function renderUserPagination(totalPages, total) {
 }
 
 function goUserPage(p) {
+  if (typeof p !== 'number' || p < 1) return;
   USER_PAGE = p;
   renderUserTable();
 }
