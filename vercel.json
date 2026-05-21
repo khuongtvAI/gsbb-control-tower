@@ -1,4 +1,10 @@
 {
   "version": 2,
-  "name": "gsbb-control-tower"
+  "name": "gsbb-control-tower",
+  "rewrites": [
+    {
+      "source": "/((?!CONTROL_TOWER).*)",
+      "destination": "/CONTROL_TOWER/app/$1"
+    }
+  ]
 }
