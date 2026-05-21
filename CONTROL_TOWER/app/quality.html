@@ -66,6 +66,17 @@ canvas { max-height:260px; }
 .filter-bar { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
 .filter-bar label { font-size:0.72rem; font-weight:600; color:var(--muted); }
 .filter-bar select { font-size:0.78rem; padding:0.3rem 0.6rem; border:1px solid var(--border); border-radius:6px; background:white; color:var(--text); }
+
+/* ── Main filter bar ─────────────────────────────────────────── */
+.main-filter-bar { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; background:white; border:1px solid var(--border); border-radius:10px; padding:0.85rem 1.25rem; margin-bottom:1.25rem; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+.mf-group { display:flex; align-items:center; gap:0.4rem; }
+.mf-group label { font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); white-space:nowrap; }
+.mf-group select { font-size:0.85rem; font-weight:600; padding:0.35rem 0.7rem; border:1.5px solid var(--border); border-radius:7px; background:white; color:var(--text); cursor:pointer; transition:border-color .15s; min-width:130px; }
+.mf-group select:hover, .mf-group select:focus { outline:none; border-color:var(--green); }
+.mf-divider { width:1px; height:24px; background:var(--border); flex-shrink:0; }
+.mf-reset { font-size:0.75rem; padding:0.35rem 0.85rem; border:1.5px solid var(--border); border-radius:7px; background:white; color:var(--muted); cursor:pointer; transition:all .15s; font-weight:600; }
+.mf-reset:hover { border-color:var(--red); color:var(--red); background:#fff7f7; }
+.mf-status { margin-left:auto; font-size:0.75rem; color:var(--green); font-weight:600; white-space:nowrap; padding:0.3rem 0.75rem; background:#f0fdf4; border-radius:20px; border:1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -106,6 +117,26 @@ canvas { max-height:260px; }
 
   <!-- Main content (hidden until loaded) -->
   <div id="main-content" style="display:none">
+
+    <!-- ── Main filter: Year / Quarter / Week ── -->
+    <div class="main-filter-bar" id="main-filter-bar">
+      <div class="mf-group">
+        <label>Năm</label>
+        <select id="mf-year" onchange="onYearChange()"><option value="">Tất cả</option></select>
+      </div>
+      <div class="mf-divider"></div>
+      <div class="mf-group">
+        <label>Quý</label>
+        <select id="mf-quarter" onchange="onQuarterChange()"><option value="">Tất cả quý</option></select>
+      </div>
+      <div class="mf-divider"></div>
+      <div class="mf-group">
+        <label>Tuần</label>
+        <select id="mf-week" onchange="onWeekChange()"><option value="">Tất cả tuần</option></select>
+      </div>
+      <button class="mf-reset" onclick="resetMainFilter()">↺ Tất cả</button>
+      <span class="mf-status" id="filter-status">Đang tải…</span>
+    </div>
 
     <!-- ── Insight summary cards ── -->
     <div class="insight-grid" id="insight-grid"></div>
@@ -218,22 +249,41 @@ const fmtPct  = v => (v*100).toFixed(2)+'%';
 const groupBy = (arr, key) => arr.reduce((a,r) => { const k = r[key]||'(trống)'; (a[k]=a[k]||[]).push(r); return a; }, {});
 const sumBy   = (arr, key) => arr.reduce((s,r) => s + (parseFloat(r[key])||0), 0);
 const isDone  = r => /hoàn thành/i.test(r.tinh_trang||'');
+const getQuarter = m => Math.ceil(parseInt(m) / 3);
 
-// ── Fetch all data ────────────────────────────────────────────
-async function fetchData() {
-  const headers = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON, 'Range': '0-1999' };
-  const res = await fetch(SB_URL+'/rest/v1/quality_issue_tracking?select=*&order=ngay_phat_hanh.desc&limit=2000', { headers });
-  if (!res.ok) throw new Error('HTTP '+res.status+' — '+await res.text());
-  return res.json();
+function getISOWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
 }
 
 // ── State ─────────────────────────────────────────────────────
-let ALL_DATA = [];
+let ALL_DATA       = [];
+let LIST_WEEK_DATA = [];
+let DISPLAY_DATA   = [];
+const CHARTS = {};
+const FILTER_STATE = { year: null, quarter: null, week: null };
+
+// ── Fetch ─────────────────────────────────────────────────────
+async function fetchData() {
+  const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON, 'Range': '0-1999' };
+  const res = await fetch(SB_URL+'/rest/v1/quality_issue_tracking?select=*&order=ngay_phat_hanh.desc&limit=2000', { headers: h });
+  if (!res.ok) throw new Error('HTTP '+res.status+' — '+await res.text());
+  return res.json();
+}
+async function fetchListWeek() {
+  const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
+  const res = await fetch(SB_URL+'/rest/v1/list_week?select=*&order=years.asc,weeks.asc&limit=200', { headers: h });
+  if (!res.ok) return [];
+  return res.json();
+}
 
 // ── Main init ─────────────────────────────────────────────────
 async function init() {
   try {
-    ALL_DATA = await fetchData();
+    [ALL_DATA, LIST_WEEK_DATA] = await Promise.all([fetchData(), fetchListWeek()]);
     document.getElementById('loading-box').style.display = 'none';
     document.getElementById('main-content').style.display = 'block';
     document.getElementById('updated-time').textContent = 'Cập nhật: '+new Date().toLocaleString('vi-VN');
@@ -242,22 +292,140 @@ async function init() {
     const periodStr = months.length ? 'Tháng '+months[0]+' – '+months[months.length-1]+' / 2026 ('+ALL_DATA.length+' issues)' : ALL_DATA.length+' issues';
     document.getElementById('hero-period').textContent = periodStr;
 
-    renderInsights(ALL_DATA);
-    renderKPIs(ALL_DATA);
-    renderTrendChart(ALL_DATA);
-    renderLevelChart(ALL_DATA);
-    renderBoPhanChart(ALL_DATA);
-    renderPhanLoaiChart(ALL_DATA);
-    renderBanChatChart(ALL_DATA);
-    renderTinhTrangChart(ALL_DATA);
-    populateFilters(ALL_DATA);
-    applyFilter();
+    populateYearSelect();
+    detectCurrentPeriod();
+    applyMainFilter();
+    populateFilters(DISPLAY_DATA);
   } catch(e) {
     document.getElementById('loading-box').style.display = 'none';
     const eb = document.getElementById('error-box');
     eb.style.display = 'block';
     eb.textContent = '❌ Lỗi tải dữ liệu: '+e.message;
   }
+}
+
+// ── Period combobox helpers ───────────────────────────────────
+function populateYearSelect() {
+  const years = [...new Set(LIST_WEEK_DATA.map(r=>r.years).filter(Boolean))].sort((a,b)=>a-b);
+  const sel = document.getElementById('mf-year');
+  years.forEach(y => {
+    const o = document.createElement('option'); o.value = y; o.textContent = 'Năm '+y; sel.appendChild(o);
+  });
+}
+
+function populateQuarterSelect(year) {
+  const sel = document.getElementById('mf-quarter');
+  sel.innerHTML = '<option value="">Tất cả quý</option>';
+  const rows = year ? LIST_WEEK_DATA.filter(r=>r.years===year) : LIST_WEEK_DATA;
+  const qs = [...new Set(rows.map(r=>r.months ? getQuarter(r.months) : null).filter(Boolean))].sort((a,b)=>a-b);
+  qs.forEach(q => {
+    const o = document.createElement('option'); o.value = q; o.textContent = 'Q'+q; sel.appendChild(o);
+  });
+}
+
+function populateWeekSelect(year, quarter) {
+  const sel = document.getElementById('mf-week');
+  sel.innerHTML = '<option value="">Tất cả tuần</option>';
+  let rows = LIST_WEEK_DATA;
+  if (year)    rows = rows.filter(r=>r.years===year);
+  if (quarter) rows = rows.filter(r=>r.months && getQuarter(r.months)===quarter);
+  [...rows].sort((a,b)=>a.weeks-b.weeks).forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.weeks;
+    o.textContent = 'W'+r.weeks+(r.months?' (T'+r.months+')':'');
+    sel.appendChild(o);
+  });
+}
+
+function detectCurrentPeriod() {
+  const today = new Date();
+  const curYear = today.getFullYear();
+  const curWeek = getISOWeek(today);
+  const curQ    = getQuarter(today.getMonth()+1);
+
+  const ySel = document.getElementById('mf-year');
+  if ([...ySel.options].find(o=>parseInt(o.value)===curYear)) {
+    ySel.value = curYear; FILTER_STATE.year = curYear;
+  }
+  populateQuarterSelect(FILTER_STATE.year);
+
+  const qSel = document.getElementById('mf-quarter');
+  if ([...qSel.options].find(o=>parseInt(o.value)===curQ)) {
+    qSel.value = curQ; FILTER_STATE.quarter = curQ;
+  }
+  populateWeekSelect(FILTER_STATE.year, FILTER_STATE.quarter);
+
+  const wSel = document.getElementById('mf-week');
+  if ([...wSel.options].find(o=>parseInt(o.value)===curWeek)) {
+    wSel.value = curWeek; FILTER_STATE.week = curWeek;
+  }
+  updateFilterStatus();
+}
+
+function updateFilterStatus() {
+  const parts = [];
+  if (FILTER_STATE.year)    parts.push('Năm '+FILTER_STATE.year);
+  if (FILTER_STATE.quarter) parts.push('Q'+FILTER_STATE.quarter);
+  if (FILTER_STATE.week)    parts.push('W'+FILTER_STATE.week);
+  document.getElementById('filter-status').textContent = parts.length ? parts.join(' · ') : 'Toàn bộ dữ liệu';
+}
+
+// ── Main filter events ────────────────────────────────────────
+function onYearChange() {
+  const v = document.getElementById('mf-year').value;
+  FILTER_STATE.year = v ? parseInt(v) : null;
+  FILTER_STATE.quarter = null; FILTER_STATE.week = null;
+  populateQuarterSelect(FILTER_STATE.year);
+  populateWeekSelect(FILTER_STATE.year, null);
+  applyMainFilter();
+}
+function onQuarterChange() {
+  const v = document.getElementById('mf-quarter').value;
+  FILTER_STATE.quarter = v ? parseInt(v) : null;
+  FILTER_STATE.week = null;
+  populateWeekSelect(FILTER_STATE.year, FILTER_STATE.quarter);
+  applyMainFilter();
+}
+function onWeekChange() {
+  const v = document.getElementById('mf-week').value;
+  FILTER_STATE.week = v ? parseInt(v) : null;
+  applyMainFilter();
+}
+function resetMainFilter() {
+  FILTER_STATE.year = null; FILTER_STATE.quarter = null; FILTER_STATE.week = null;
+  document.getElementById('mf-year').value = '';
+  populateQuarterSelect(null);
+  populateWeekSelect(null, null);
+  applyMainFilter();
+}
+
+// ── Apply main period filter → DISPLAY_DATA ───────────────────
+function applyMainFilter() {
+  let data = ALL_DATA;
+  if (FILTER_STATE.week) {
+    data = data.filter(r => parseInt(r.week) === FILTER_STATE.week);
+  } else if (FILTER_STATE.quarter && FILTER_STATE.year) {
+    const wNums = LIST_WEEK_DATA
+      .filter(r => r.years === FILTER_STATE.year && r.months && getQuarter(r.months) === FILTER_STATE.quarter)
+      .map(r => r.weeks);
+    data = data.filter(r => wNums.includes(parseInt(r.week)));
+  } else if (FILTER_STATE.quarter) {
+    data = data.filter(r => r.month && getQuarter(parseInt(r.month)) === FILTER_STATE.quarter);
+  } else if (FILTER_STATE.year) {
+    const wNums = LIST_WEEK_DATA.filter(r => r.years === FILTER_STATE.year).map(r => r.weeks);
+    data = data.filter(r => wNums.includes(parseInt(r.week)));
+  }
+  DISPLAY_DATA = data;
+  updateFilterStatus();
+  renderInsights(DISPLAY_DATA);
+  renderKPIs(DISPLAY_DATA);
+  renderTrendChart(DISPLAY_DATA);
+  renderLevelChart(DISPLAY_DATA);
+  renderBoPhanChart(DISPLAY_DATA);
+  renderPhanLoaiChart(DISPLAY_DATA);
+  renderBanChatChart(DISPLAY_DATA);
+  renderTinhTrangChart(DISPLAY_DATA);
+  applyFilter();
 }
 
 // ── Insight summary cards ─────────────────────────────────────
@@ -268,11 +436,10 @@ function renderInsights(data) {
   const overdueItems = data.filter(r => !isDone(r) && parseFloat(r.so_ngay_qua_han||0) > 0);
   const levelA       = data.filter(r => r.level_claim === 'A').length;
   const avgDefect    = data.filter(r=>r.ty_le_loi>0).length > 0
-    ? sumBy(data.filter(r=>r.ty_le_loi>0),'ty_le_loi') / data.filter(r=>r.ty_le_loi>0).length
-    : 0;
+    ? sumBy(data.filter(r=>r.ty_le_loi>0),'ty_le_loi') / data.filter(r=>r.ty_le_loi>0).length : 0;
 
   const cards = [
-    { label:'Tổng COPQ 2026', value: fmtVND(totalCOPQ), sub:'Chi phí thiệt hại toàn bộ', cls: totalCOPQ>5e9?'alert':'warn' },
+    { label:'Tổng COPQ', value: fmtVND(totalCOPQ), sub:'Chi phí thiệt hại', cls: totalCOPQ>5e9?'alert':'warn' },
     { label:'Bồi hoàn từ đối tác', value: fmtVND(totalBoiHoan), sub:'Đã thu hồi được', cls:'ok' },
     { label:'Issues đang mở', value: openItems.length, sub:'Chưa hoàn thành xử lý', cls: openItems.length>20?'alert':'warn' },
     { label:'Quá hạn phản hồi', value: overdueItems.length, sub:'Cần xử lý ngay', cls: overdueItems.length>5?'alert':'warn' },
@@ -305,7 +472,7 @@ function renderKPIs(data) {
   const monthDelta  = prevCount ? latestCount - prevCount : 0;
 
   const cards = [
-    { label:'Tổng issue 2026', value: total, sub:'toàn bộ NCR/CAR/8D/A3', cls:'', delta: monthDelta ? (monthDelta>0?'↑ +'+monthDelta+' so T'+(latestMonth-1):'↓ '+monthDelta+' so T'+(latestMonth-1)) : '', deltaDir: monthDelta>0?'up':'down' },
+    { label:'Tổng issue', value: total, sub:'NCR/CAR/8D/A3', cls:'', delta: monthDelta ? (monthDelta>0?'↑ +'+monthDelta+' so T'+(latestMonth-1):'↓ '+monthDelta+' so T'+(latestMonth-1)) : '', deltaDir: monthDelta>0?'up':'down' },
     { label:'Hoàn thành', value: done+' / '+total, sub: donePct+'% đã đóng', cls:'green', delta:'', deltaDir:'' },
     { label:'Tổng NG (pcs)', value: totalNG.toLocaleString('vi-VN'), sub:'sản phẩm không đạt', cls:'amber', delta:'', deltaDir:'' },
     { label:'Defect Rate TB', value: fmtPct(overallDefect), sub:'target < 0.5%', cls: overallDefect>0.005?'red':'green', delta:'', deltaDir:'' },
@@ -323,6 +490,7 @@ function renderKPIs(data) {
 
 // ── Chart 1: Trend ────────────────────────────────────────────
 function renderTrendChart(data) {
+  if (CHARTS.trend) { CHARTS.trend.destroy(); delete CHARTS.trend; }
   const monthMap = {};
   data.forEach(r => {
     if (!r.month) return;
@@ -333,7 +501,7 @@ function renderTrendChart(data) {
   const months = Object.keys(monthMap).map(Number).sort((a,b)=>a-b);
   const counts = months.map(m => monthMap[m].count);
   const copqs  = months.map(m => +(monthMap[m].copq/1e6).toFixed(1));
-  new Chart(document.getElementById('chart-trend'), {
+  CHARTS.trend = new Chart(document.getElementById('chart-trend'), {
     data: {
       labels: months.map(m=>MONTH_NAMES[m]),
       datasets: [
@@ -352,29 +520,31 @@ function renderTrendChart(data) {
 
 // ── Chart 2: Level Claim ──────────────────────────────────────
 function renderLevelChart(data) {
+  if (CHARTS.level) { CHARTS.level.destroy(); delete CHARTS.level; }
   const groups = groupBy(data, 'level_claim');
   const levels = Object.keys(groups).sort();
   const levelColors = { A:RED, B:AMBER, C:GREEN2, '(trống)':'#9ca3af' };
-  new Chart(document.getElementById('chart-level'), {
+  CHARTS.level = new Chart(document.getElementById('chart-level'), {
     type:'doughnut',
     data: {
       labels: levels.map(l=>l==='(trống)'?'Chưa phân loại':'Level '+l+' ('+groups[l].length+')'),
       datasets:[{ data: levels.map(l=>groups[l].length), backgroundColor: levels.map(l=>levelColors[l]||BLUE), borderWidth:2, borderColor:'white' }]
     },
     options: { responsive:true, plugins:{ legend:{ position:'right', labels:{ font:{size:11} } },
-      tooltip:{ callbacks:{ label: ctx => ' '+ctx.label+': '+Math.round(ctx.parsed/data.length*100)+'% ('+ctx.parsed+' case)' } }
+      tooltip:{ callbacks:{ label: ctx => ' '+ctx.label+': '+Math.round(ctx.parsed/(data.length||1)*100)+'% ('+ctx.parsed+' case)' } }
     } }
   });
 }
 
 // ── Chart 3: Bộ phận ─────────────────────────────────────────
 function renderBoPhanChart(data) {
+  if (CHARTS.bophan) { CHARTS.bophan.destroy(); delete CHARTS.bophan; }
   const groups = groupBy(data,'bo_phan');
   const sorted = Object.entries(groups).sort((a,b)=>b[1].length-a[1].length).slice(0,10);
   const labels = sorted.map(([k])=>k);
   const counts = sorted.map(([,v])=>v.length);
   const copqs  = sorted.map(([,v])=>+(sumBy(v,'chi_phi_thiet_hai')/1e6).toFixed(1));
-  new Chart(document.getElementById('chart-bophan'), {
+  CHARTS.bophan = new Chart(document.getElementById('chart-bophan'), {
     data: {
       labels,
       datasets:[
@@ -393,10 +563,11 @@ function renderBoPhanChart(data) {
 
 // ── Chart 4: Phân loại ────────────────────────────────────────
 function renderPhanLoaiChart(data) {
+  if (CHARTS.phanloai) { CHARTS.phanloai.destroy(); delete CHARTS.phanloai; }
   const groups = groupBy(data,'phan_loai');
   const plColors = { NCR:BLUE, CAR:PURPLE, '8D':AMBER, A3:GREEN2, '(trống)':'#9ca3af' };
   const keys = Object.keys(groups).sort();
-  new Chart(document.getElementById('chart-phanloai'), {
+  CHARTS.phanloai = new Chart(document.getElementById('chart-phanloai'), {
     type:'doughnut',
     data: {
       labels: keys.map(k=>k+' ('+groups[k].length+')'),
@@ -408,6 +579,7 @@ function renderPhanLoaiChart(data) {
 
 // ── Chart 5: Bản chất ─────────────────────────────────────────
 function renderBanChatChart(data) {
+  if (CHARTS.banchat) { CHARTS.banchat.destroy(); delete CHARTS.banchat; }
   const catCount = {};
   data.forEach(r => {
     const val = (r.ban_chat||'').trim();
@@ -419,7 +591,7 @@ function renderBanChatChart(data) {
   });
   const sorted = Object.entries(catCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
   if (!sorted.length) return;
-  new Chart(document.getElementById('chart-banchat'), {
+  CHARTS.banchat = new Chart(document.getElementById('chart-banchat'), {
     type:'bar',
     data: {
       labels: sorted.map(([k])=>k),
@@ -432,10 +604,11 @@ function renderBanChatChart(data) {
 
 // ── Chart 6: Tình trạng ───────────────────────────────────────
 function renderTinhTrangChart(data) {
+  if (CHARTS.tinhtrang) { CHARTS.tinhtrang.destroy(); delete CHARTS.tinhtrang; }
   const groups = groupBy(data,'tinh_trang');
   const keys = Object.keys(groups).sort((a,b)=>groups[b].length-groups[a].length);
   const colors = keys.map(k => /hoàn thành/i.test(k) ? GREEN : /đang/i.test(k) ? AMBER : RED);
-  new Chart(document.getElementById('chart-tinhtrang'), {
+  CHARTS.tinhtrang = new Chart(document.getElementById('chart-tinhtrang'), {
     type:'bar',
     data: {
       labels: keys.map(k=>(k==='(trống)'?'Chưa cập nhật':k)),
@@ -449,19 +622,25 @@ function renderTinhTrangChart(data) {
 function populateFilters(data) {
   const boPhanSet = [...new Set(data.map(r=>r.bo_phan||'').filter(Boolean))].sort();
   const sel = document.getElementById('filter-bophan');
-  boPhanSet.forEach(bp => { const o=document.createElement('option'); o.value=bp; o.textContent=bp; sel.appendChild(o); });
+  const curVal = sel.value;
+  sel.innerHTML = '<option value="">Tất cả bộ phận</option>';
+  boPhanSet.forEach(bp => {
+    const o = document.createElement('option'); o.value=bp; o.textContent=bp;
+    if (bp===curVal) o.selected=true;
+    sel.appendChild(o);
+  });
 }
 
 function applyFilter() {
-  const bpFilter  = document.getElementById('filter-bophan').value;
-  const lvFilter  = document.getElementById('filter-level').value;
-  const stFilter  = document.getElementById('filter-tinh').value;
+  const bpFilter = document.getElementById('filter-bophan').value;
+  const lvFilter = document.getElementById('filter-level').value;
+  const stFilter = document.getElementById('filter-tinh').value;
 
-  let filtered = ALL_DATA;
+  let filtered = DISPLAY_DATA.length ? DISPLAY_DATA : ALL_DATA;
   if (bpFilter) filtered = filtered.filter(r=>r.bo_phan===bpFilter);
   if (lvFilter) filtered = filtered.filter(r=>r.level_claim===lvFilter);
-  if (stFilter==='open')  filtered = filtered.filter(r=>!isDone(r));
-  if (stFilter==='done')  filtered = filtered.filter(r=>isDone(r));
+  if (stFilter==='open') filtered = filtered.filter(r=>!isDone(r));
+  if (stFilter==='done') filtered = filtered.filter(r=>isDone(r));
 
   filtered = filtered.slice().sort((a,b) => {
     const aOD = parseFloat(a.so_ngay_qua_han||0);
