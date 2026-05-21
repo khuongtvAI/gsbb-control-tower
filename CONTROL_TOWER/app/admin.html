@@ -73,6 +73,14 @@
 .toggle-sw input:checked + .toggle-slider { background:var(--green); }
 .toggle-sw input:checked + .toggle-slider:before { transform:translateX(16px); }
 
+/* ── Pagination ─────────────────────────────────────────────── */
+.pagination { display:flex; align-items:center; gap:0.3rem; flex-wrap:wrap; }
+.pg-btn { padding:0.25rem 0.6rem; border:1.5px solid var(--border); border-radius:6px; font-size:0.75rem; font-weight:600; cursor:pointer; background:white; color:var(--text); transition:all .15s; min-width:30px; text-align:center; }
+.pg-btn:hover { border-color:var(--green); color:var(--green); }
+.pg-btn.active { background:var(--green); color:white; border-color:var(--green); }
+.pg-btn:disabled { opacity:0.4; cursor:default; }
+.pg-info { font-size:0.72rem; color:var(--muted); margin-left:0.5rem; }
+
 /* ── Save bar ────────────────────────────────────────────────── */
 .save-bar { display:flex; align-items:center; gap:1rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border); }
 .save-status { font-size:0.8rem; color:var(--green); font-weight:600; }
@@ -194,8 +202,8 @@
     <div class="section-head">
       <h3>Danh sách Users</h3>
       <div class="toolbar">
-        <input type="text" id="user-search2" placeholder="🔍 Tìm user..." oninput="renderUserTable()">
-        <label><input type="checkbox" id="show-inactive2" onchange="renderUserTable()"> Hiển thị inactive</label>
+        <input type="text" id="user-search2" placeholder="🔍 Tìm user..." oninput="renderUserTable(true)">
+        <label><input type="checkbox" id="show-inactive2" onchange="renderUserTable(true)"> Hiển thị inactive</label>
       </div>
     </div>
     <div style="overflow-x:auto">
@@ -217,7 +225,10 @@
         <tbody id="user-tbody"></tbody>
       </table>
     </div>
-    <div id="user-table-footer" style="font-size:0.72rem;color:var(--muted);text-align:right;margin-top:0.5rem"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.75rem;flex-wrap:wrap;gap:0.5rem">
+      <div id="user-pagination" class="pagination"></div>
+      <div id="user-table-footer" style="font-size:0.72rem;color:var(--muted)"></div>
+    </div>
   </div>
 
   <!-- ── Phân quyền Edit / View ── -->
@@ -515,23 +526,32 @@ function showSaveStatus(msg, isErr) {
   setTimeout(() => { el.textContent = ''; }, 4000);
 }
 
-// ── User table ────────────────────────────────────────────────
-function renderUserTable() {
+// ── User table with pagination ────────────────────────────────
+const PAGE_SIZE = 15;
+let USER_PAGE   = 1;
+
+function renderUserTable(resetPage) {
+  if (resetPage) USER_PAGE = 1;
   const q           = (document.getElementById('user-search2')?.value||'').toLowerCase();
   const showInactive = document.getElementById('show-inactive2')?.checked;
-  let users = ALL_USERS.filter(u => {
+  const filtered = ALL_USERS.filter(u => {
     if (!showInactive && !u.is_active) return false;
     if (q) return (u.username||'').toLowerCase().includes(q) || (u.full_name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  if (USER_PAGE > totalPages) USER_PAGE = totalPages;
+  const start = (USER_PAGE - 1) * PAGE_SIZE;
+  const page  = filtered.slice(start, start + PAGE_SIZE);
+
   const roleLabel = code => ({ 1:'CEO', 2:'Staff', 3:'Manager', 4:'Admin' }[code] || (code||'—'));
   const deptLabel = code => ({ 1:'SX', 2:'QC', 3:'SCM', 4:'HR', 5:'IT', 6:'Finance', 7:'Sales' }[code] || (code||'—'));
 
   const tbody = document.getElementById('user-tbody');
-  tbody.innerHTML = users.map((u,i) => `
+  tbody.innerHTML = page.map((u, i) => `
     <tr>
-      <td style="color:var(--muted)">${i+1}</td>
+      <td style="color:var(--muted)">${start + i + 1}</td>
       <td><strong>${u.username}</strong></td>
       <td>${u.full_name||'—'}</td>
       <td style="font-size:0.72rem">${u.email||'—'}</td>
@@ -548,8 +568,43 @@ function renderUserTable() {
       </td>
     </tr>`).join('');
 
+  // Pagination controls
+  renderUserPagination(totalPages, filtered.length);
   document.getElementById('user-table-footer').textContent =
-    `Hiển thị ${users.length} / ${ALL_USERS.length} users`;
+    `Trang ${USER_PAGE}/${totalPages} · Hiển thị ${start+1}–${Math.min(start+PAGE_SIZE, filtered.length)} / ${filtered.length} users`;
+}
+
+function renderUserPagination(totalPages, total) {
+  const pg = document.getElementById('user-pagination');
+  if (totalPages <= 1) { pg.innerHTML = ''; return; }
+
+  const maxBtns = 7;
+  let pages = [];
+
+  if (totalPages <= maxBtns) {
+    pages = Array.from({length: totalPages}, (_, i) => i + 1);
+  } else {
+    pages = [1];
+    let lo = Math.max(2, USER_PAGE - 2);
+    let hi = Math.min(totalPages - 1, USER_PAGE + 2);
+    if (lo > 2) pages.push('…');
+    for (let i = lo; i <= hi; i++) pages.push(i);
+    if (hi < totalPages - 1) pages.push('…');
+    pages.push(totalPages);
+  }
+
+  pg.innerHTML =
+    `<button class="pg-btn" onclick="goUserPage(${USER_PAGE-1})" ${USER_PAGE===1?'disabled':''}>‹</button>` +
+    pages.map(p => p === '…'
+      ? `<span class="pg-info">…</span>`
+      : `<button class="pg-btn ${p===USER_PAGE?'active':''}" onclick="goUserPage(${p})">${p}</button>`
+    ).join('') +
+    `<button class="pg-btn" onclick="goUserPage(${USER_PAGE+1})" ${USER_PAGE===totalPages?'disabled':''}>›</button>`;
+}
+
+function goUserPage(p) {
+  USER_PAGE = p;
+  renderUserTable();
 }
 
 async function toggleActive(userId, newVal, username) {
@@ -562,7 +617,7 @@ async function toggleActive(userId, newVal, username) {
     if (u) u.is_active = newVal;
     renderStats();
     renderMatrix();
-    renderUserTable();
+    renderUserTable();   // giữ nguyên trang hiện tại
     showSaveStatus(`✅ ${username}: ${newVal?'Activated':'Deactivated'}`, false);
   } else {
     showSaveStatus('❌ Lỗi cập nhật user', true);
