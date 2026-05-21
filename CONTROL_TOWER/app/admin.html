@@ -81,6 +81,26 @@
 /* ── Logout btn ──────────────────────────────────────────────── */
 .logout-btn { font-size:0.75rem; padding:0.3rem 0.75rem; border:1px solid #4a7a5a; border-radius:5px; color:#9ca3af; background:transparent; cursor:pointer; transition:all .15s; }
 .logout-btn:hover { color:white; border-color:#dc2626; background:#dc262622; }
+
+/* ── Edit/View permission layout ────────────────────────────── */
+.perm-layout { display:grid; grid-template-columns:220px 1fr; gap:1rem; align-items:start; }
+@media(max-width:700px){ .perm-layout { grid-template-columns:1fr; } }
+.perm-users-wrap { border:1.5px solid var(--border); border-radius:8px; overflow:hidden; max-height:400px; overflow-y:auto; }
+.perm-users-tbl { width:100%; border-collapse:collapse; font-size:0.78rem; }
+.perm-users-tbl th { background:#f0f7f2; padding:0.45rem 0.75rem; font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); border-bottom:2px solid var(--border); }
+.perm-users-tbl td { padding:0.4rem 0.75rem; border-bottom:1px solid #e8f5ec; cursor:pointer; transition:background .1s; }
+.perm-users-tbl tr:hover td { background:#f0f7f2; }
+.perm-users-tbl tr.selected td { background:#dcfce7; font-weight:700; color:var(--green); }
+.perm-rights-wrap { border:1.5px solid var(--border); border-radius:8px; overflow:hidden; }
+.perm-rights-tbl { width:100%; border-collapse:collapse; font-size:0.82rem; }
+.perm-rights-tbl th { background:#f0f7f2; padding:0.5rem 0.75rem; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); border-bottom:2px solid var(--border); text-align:center; }
+.perm-rights-tbl th:first-child { text-align:left; }
+.perm-rights-tbl td { padding:0.5rem 0.75rem; border-bottom:1px solid #e8f5ec; text-align:center; }
+.perm-rights-tbl td:first-child { text-align:left; }
+.perm-rights-tbl tr:hover td { background:#f8fdf9; }
+.perm-rights-tbl input[type=checkbox] { width:17px; height:17px; cursor:pointer; accent-color:var(--green); }
+.perm-rights-tbl td.dirty { background:#fffbeb !important; }
+.perm-empty { padding:2rem; text-align:center; color:var(--muted); font-size:0.82rem; }
 </style>
 </head>
 <body>
@@ -199,6 +219,50 @@
     </div>
     <div id="user-table-footer" style="font-size:0.72rem;color:var(--muted);text-align:right;margin-top:0.5rem"></div>
   </div>
+
+  <!-- ── Phân quyền Edit / View ── -->
+  <div class="section-block">
+    <div class="section-head">
+      <h3>Phân quyền Chức năng — Edit &amp; View</h3>
+      <div class="toolbar">
+        <input type="text" id="perm-search" placeholder="🔍 Tìm user..." oninput="renderPermUsers()">
+        <span style="font-size:0.78rem;color:var(--muted)" id="perm-selected-label">← Chọn user để xem quyền</span>
+      </div>
+    </div>
+    <div class="perm-layout">
+      <!-- Left: danh sách users -->
+      <div>
+        <div class="perm-users-wrap">
+          <table class="perm-users-tbl">
+            <thead><tr><th>UserName</th></tr></thead>
+            <tbody id="perm-users-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Right: Edit/View matrix cho user được chọn -->
+      <div>
+        <div class="perm-rights-wrap">
+          <table class="perm-rights-tbl">
+            <thead>
+              <tr>
+                <th style="min-width:160px">Trang</th>
+                <th style="width:80px">Edit</th>
+                <th style="width:80px">View</th>
+              </tr>
+            </thead>
+            <tbody id="perm-rights-body">
+              <tr><td colspan="3" class="perm-empty">← Chọn user từ danh sách bên trái</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="save-bar">
+      <button class="btn btn-green" onclick="saveFuncPerms()">💾 Lưu quyền Edit/View</button>
+      <span id="perm-change-count" style="font-size:0.78rem;color:var(--muted)">Chưa có thay đổi</span>
+      <span class="save-status" id="perm-save-status"></span>
+    </div>
+  </div>
 </main>
 </div><!-- /admin-wrap -->
 
@@ -291,8 +355,9 @@ async function fetchAccess() {
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
   try {
-    const [users, access] = await Promise.all([fetchUsers(), fetchAccess()]);
+    const [users, access, ufRows] = await Promise.all([fetchUsers(), fetchAccess(), fetchUsersFunc()]);
     ALL_USERS = users;
+    UF_DATA   = ufRows;
 
     ACCESS_MAP = {};
     access.forEach(r => { ACCESS_MAP[`${r.user_id}_${r.function_id}`] = r.is_active; });
@@ -300,6 +365,7 @@ async function init() {
     renderStats();
     renderMatrix();
     renderUserTable();
+    renderPermUsers();
   } catch(e) {
     alert('Lỗi tải dữ liệu: ' + e.message);
   }
@@ -501,6 +567,136 @@ async function toggleActive(userId, newVal, username) {
   } else {
     showSaveStatus('❌ Lỗi cập nhật user', true);
   }
+}
+
+// ── Phân quyền Edit/View (users_functions) ───────────────────
+let UF_DATA    = [];   // rows from users_functions
+let UF_CHANGES = {};   // key: `${username}_${fid}`, value: {can_edit, can_view}
+let UF_SELECTED = null; // selected username
+
+async function fetchUsersFunc() {
+  const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
+  const res = await fetch(SB_URL+'/rest/v1/users_functions?select=username,function_id,can_edit,can_view&limit=5000', { headers: h });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+function getUFKey(username, fid) { return `${username}_${fid}`; }
+
+function getUFVal(username, fid) {
+  const key = getUFKey(username, fid);
+  if (key in UF_CHANGES) return UF_CHANGES[key];
+  const row = UF_DATA.find(r => r.username === username && r.function_id === fid);
+  return row ? { can_edit: row.can_edit, can_view: row.can_view } : { can_edit: false, can_view: false };
+}
+
+function renderPermUsers() {
+  const q = (document.getElementById('perm-search')?.value||'').toLowerCase();
+  const users = ALL_USERS.filter(u => u.is_active).filter(u =>
+    !q || (u.username||'').toLowerCase().includes(q) || (u.full_name||'').toLowerCase().includes(q)
+  );
+  const tbody = document.getElementById('perm-users-body');
+  tbody.innerHTML = users.map(u => `
+    <tr class="${UF_SELECTED===u.username?'selected':''}" onclick="selectPermUser('${u.username}','${u.full_name||u.username}')">
+      <td>${u.username}${u.full_name?`<div style="font-size:0.68rem;color:var(--muted)">${u.full_name}</div>`:''}</td>
+    </tr>`).join('');
+}
+
+function selectPermUser(username, displayName) {
+  UF_SELECTED = username;
+  document.getElementById('perm-selected-label').textContent = `User: ${displayName}`;
+  renderPermUsers();
+  renderPermRights();
+}
+
+function renderPermRights() {
+  const tbody = document.getElementById('perm-rights-body');
+  if (!UF_SELECTED) {
+    tbody.innerHTML = '<tr><td colspan="3" class="perm-empty">← Chọn user từ danh sách bên trái</td></tr>';
+    return;
+  }
+  tbody.innerHTML = CT_PAGES.map(p => {
+    const key = getUFKey(UF_SELECTED, p.id);
+    const val = getUFVal(UF_SELECTED, p.id);
+    const dirty = key in UF_CHANGES;
+    return `<tr>
+      <td>${p.icon} ${p.name}</td>
+      <td class="${dirty?'dirty':''}">
+        <input type="checkbox" ${val.can_edit?'checked':''} data-u="${UF_SELECTED}" data-fid="${p.id}" data-col="edit" onchange="onPermChange(this)">
+      </td>
+      <td class="${dirty?'dirty':''}">
+        <input type="checkbox" ${val.can_view?'checked':''} data-u="${UF_SELECTED}" data-fid="${p.id}" data-col="view" onchange="onPermChange(this)">
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function onPermChange(el) {
+  const username = el.dataset.u;
+  const fid      = parseInt(el.dataset.fid);
+  const col      = el.dataset.col; // 'edit' or 'view'
+  const key      = getUFKey(username, fid);
+
+  if (!(key in UF_CHANGES)) {
+    const cur = getUFVal(username, fid);
+    UF_CHANGES[key] = { ...cur };
+  }
+  if (col === 'edit') UF_CHANGES[key].can_edit = el.checked;
+  else                UF_CHANGES[key].can_view = el.checked;
+
+  // Mark both cells dirty
+  el.closest('tr').querySelectorAll('td:not(:first-child)').forEach(td => td.classList.add('dirty'));
+  updatePermChangeCount();
+}
+
+function updatePermChangeCount() {
+  const n = Object.keys(UF_CHANGES).length;
+  document.getElementById('perm-change-count').textContent = n ? `${n} thay đổi chưa lưu` : 'Chưa có thay đổi';
+}
+
+async function saveFuncPerms() {
+  const keys = Object.keys(UF_CHANGES);
+  if (!keys.length) { showPermStatus('Không có thay đổi nào.', false); return; }
+
+  const rows = keys.map(key => {
+    const [username, fid] = key.split('_');
+    const v = UF_CHANGES[key];
+    return { username, function_id: parseInt(fid), can_edit: v.can_edit, can_view: v.can_view };
+  });
+
+  const h = {
+    'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON,
+    'Content-Type': 'application/json',
+    'Prefer': 'resolution=merge-duplicates,return=minimal'
+  };
+  try {
+    const res = await fetch(SB_URL+'/rest/v1/users_functions', {
+      method: 'POST', headers: h, body: JSON.stringify(rows)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error(t); }
+
+    // Merge into UF_DATA
+    keys.forEach(key => {
+      const [username, fid] = key.split('_');
+      const fidN = parseInt(fid);
+      const existing = UF_DATA.find(r => r.username===username && r.function_id===fidN);
+      if (existing) { existing.can_edit = UF_CHANGES[key].can_edit; existing.can_view = UF_CHANGES[key].can_view; }
+      else UF_DATA.push({ username, function_id: fidN, ...UF_CHANGES[key] });
+    });
+    UF_CHANGES = {};
+    renderPermRights();
+    updatePermChangeCount();
+    showPermStatus(`✅ Đã lưu ${keys.length} thay đổi`, false);
+  } catch(e) {
+    showPermStatus('❌ Lỗi: ' + e.message, true);
+  }
+}
+
+function showPermStatus(msg, isErr) {
+  const el = document.getElementById('perm-save-status');
+  el.textContent = msg;
+  el.className = 'save-status' + (isErr?' err':'');
+  setTimeout(() => { el.textContent = ''; }, 4000);
 }
 
 // ── Boot ──────────────────────────────────────────────────────
