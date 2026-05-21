@@ -249,7 +249,8 @@ const fmtPct  = v => (v*100).toFixed(2)+'%';
 const groupBy = (arr, key) => arr.reduce((a,r) => { const k = r[key]||'(trống)'; (a[k]=a[k]||[]).push(r); return a; }, {});
 const sumBy   = (arr, key) => arr.reduce((s,r) => s + (parseFloat(r[key])||0), 0);
 const isDone  = r => /hoàn thành/i.test(r.tinh_trang||'');
-const getQuarter = m => Math.ceil(parseInt(m) / 3);
+const getQuarter  = m => Math.ceil(parseInt(m) / 3);
+const parseWeekNum = v => parseInt((v||'').toString().replace(/^W/i, '')) || 0;
 
 function getISOWeek(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -403,17 +404,18 @@ function resetMainFilter() {
 function applyMainFilter() {
   let data = ALL_DATA;
   if (FILTER_STATE.week) {
-    data = data.filter(r => parseInt(r.week) === FILTER_STATE.week);
+    // week column stores "W21" format → strip W prefix before compare
+    data = data.filter(r => parseWeekNum(r.week) === FILTER_STATE.week);
   } else if (FILTER_STATE.quarter && FILTER_STATE.year) {
     const wNums = LIST_WEEK_DATA
       .filter(r => r.years === FILTER_STATE.year && r.months && getQuarter(r.months) === FILTER_STATE.quarter)
       .map(r => r.weeks);
-    data = data.filter(r => wNums.includes(parseInt(r.week)));
+    data = data.filter(r => wNums.includes(parseWeekNum(r.week)));
   } else if (FILTER_STATE.quarter) {
     data = data.filter(r => r.month && getQuarter(parseInt(r.month)) === FILTER_STATE.quarter);
   } else if (FILTER_STATE.year) {
     const wNums = LIST_WEEK_DATA.filter(r => r.years === FILTER_STATE.year).map(r => r.weeks);
-    data = data.filter(r => wNums.includes(parseInt(r.week)));
+    data = data.filter(r => wNums.includes(parseWeekNum(r.week)));
   }
   DISPLAY_DATA = data;
   updateFilterStatus();
