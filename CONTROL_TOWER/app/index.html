@@ -336,6 +336,37 @@ function updateKPIs(data) {
   document.getElementById('meta-time').textContent   = new Date().toLocaleString('vi-VN');
 }
 
+// ── Load OC sample data ───────────────────────────────────────
+async function loadOC() {
+  try {
+    const oc = await fetch('/data/campaign/oc_status_data_sample.json', {cache:'no-store'}).then(r=>r.json());
+    document.getElementById('oc-red').textContent   = oc.data.rag_count.red;
+    document.getElementById('oc-amber').textContent = oc.data.rag_count.amber;
+    document.getElementById('oc-green').textContent = oc.data.rag_count.green;
+    const tbody = document.getElementById('oc-rows');
+    tbody.innerHTML = oc.data.oc_list.map(o => `
+      <tr class="${o.status}">
+        <td>${o.id}</td>
+        <td>${o.name}</td>
+        <td>${o.truc||''}</td>
+        <td>${o.phase||''}</td>
+        <td>${o.status.toUpperCase()}</td>
+        <td>${o.completion_pct??''}%</td>
+        <td>${o.next_milestone||''}<br><small style="color:var(--muted)">${o.milestone_due||''}</small></td>
+        <td style="color:${o.blocker?'var(--red)':'var(--muted)'}">${o.blocker||'—'}</td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+// ── Load finance sample data ──────────────────────────────────
+async function loadFinance() {
+  try {
+    const fin = await fetch('/data/finance/finance_data_sample.json', {cache:'no-store'}).then(r=>r.json());
+    document.getElementById('kpi-revenue').textContent = fin.data.revenue_bn.toFixed(1);
+    document.getElementById('kpi-ebitda').textContent  = fin.data.ebitda_bn.toFixed(1);
+  } catch(e) {}
+}
+
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
   try {
@@ -347,11 +378,11 @@ async function init() {
       .insertAdjacentHTML('beforeend',
         `<div style="color:var(--red);font-size:.8rem;margin-top:.5rem">⚠ Không tải được COPQ: ${e.message}</div>`);
   }
+  loadOC();
+  loadFinance();
 }
 
 init();
 </script>
-
-<script src="assets/app.js"></script>
 </body>
 </html>

@@ -3,7 +3,11 @@
   "name": "gsbb-control-tower",
   "rewrites": [
     {
-      "source": "/((?!CONTROL_TOWER).*)",
+      "source": "/data/(.*)",
+      "destination": "/DATA_LAYER/$1"
+    },
+    {
+      "source": "/((?!CONTROL_TOWER|DATA_LAYER|login\\.html|api/).*)",
       "destination": "/CONTROL_TOWER/app/$1"
     }
   ]
