@@ -2,8 +2,53 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GSBB Control Tower — Executive Summary</title>
 <link rel="stylesheet" href="assets/ct-shared.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+/* ── COPQ chart section ───────────────────────────────────── */
+.chart-section { background:#fff; border-radius:10px; border:1px solid var(--border); box-shadow:0 1px 3px rgba(0,0,0,.06); padding:1.25rem 1.5rem; margin-bottom:1.5rem; }
+.chart-section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:.75rem; }
+.chart-section-head h2 { font-size:.85rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin:0; }
+.chart-meta { font-size:.72rem; color:var(--muted); }
+
+/* ── Tab toggle ──────────────────────────────────────────── */
+.tab-group { display:flex; gap:.35rem; background:#f0f7f2; border-radius:8px; padding:.3rem; }
+.tab-btn { padding:.3rem .9rem; border:none; border-radius:6px; font-size:.78rem; font-weight:600; cursor:pointer; background:transparent; color:var(--muted); transition:all .15s; }
+.tab-btn.active { background:#fff; color:var(--green); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+.tab-btn:hover:not(.active) { color:var(--text); }
+
+/* ── Chart canvas ────────────────────────────────────────── */
+.copq-canvas-wrap { position:relative; height:260px; }
+
+/* ── Summary chips under chart ───────────────────────────── */
+.copq-summary { display:flex; gap:1rem; margin-top:.85rem; flex-wrap:wrap; }
+.copq-chip { background:#f0f7f2; border-radius:8px; padding:.5rem .9rem; text-align:center; min-width:120px; }
+.copq-chip .chip-label { font-size:.67rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.copq-chip .chip-value { font-size:1.2rem; font-weight:700; color:var(--text); margin-top:.15rem; }
+.copq-chip.highlight { background:linear-gradient(135deg,#071E0F,#0f3d20); }
+.copq-chip.highlight .chip-label { color:#86efac; }
+.copq-chip.highlight .chip-value { color:#fff; }
+.copq-chip.warn .chip-value { color:var(--red); }
+
+/* ── OC table ────────────────────────────────────────────── */
+.oc-table { width:100%; border-collapse:collapse; font-size:.78rem; margin-top:.5rem; }
+.oc-table th { background:#f0f7f2; padding:.5rem .75rem; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); border-bottom:2px solid var(--border); }
+.oc-table td { padding:.45rem .75rem; border-bottom:1px solid #e8f5ec; vertical-align:middle; }
+.oc-table tr.red td   { border-left:3px solid var(--red); }
+.oc-table tr.amber td { border-left:3px solid var(--amber); }
+.oc-table tr.green td { border-left:3px solid var(--green); }
+.oc-table tr:hover td { background:#f8fdf9; }
+
+/* ── dot ────────────────────────────────────────────────── */
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:3px; }
+.dot.red   { background:var(--red); }
+.dot.amber { background:var(--amber); }
+.dot.green { background:var(--green); }
+
+.section-title { font-size:.85rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text); margin-bottom:.75rem; margin-top:1.5rem; padding-bottom:.5rem; border-bottom:2px solid var(--border); }
+</style>
 </head>
 <body>
 <header>
@@ -24,6 +69,7 @@
 </header>
 
 <main>
+  <!-- KPI grid -->
   <section class="kpi-grid" id="kpi-summary">
     <div class="kpi-card" data-rag="green">
       <div class="kpi-label">Doanh thu T5/2026</div>
@@ -35,10 +81,10 @@
       <div class="kpi-value" id="kpi-ebitda">—</div>
       <div class="kpi-unit">tỷ VNĐ</div>
     </div>
-    <div class="kpi-card" data-rag="red">
-      <div class="kpi-label">COPQ</div>
+    <div class="kpi-card red">
+      <div class="kpi-label">COPQ 2026</div>
       <div class="kpi-value" id="kpi-copq">—</div>
-      <div class="kpi-unit">tỷ VNĐ</div>
+      <div class="kpi-unit">triệu VNĐ · <a href="quality.html" style="color:var(--red);font-size:.68rem">Chi tiết →</a></div>
     </div>
     <div class="kpi-card">
       <div class="kpi-label">14 OC Status</div>
@@ -49,28 +95,262 @@
       </div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Escalation Queue</div>
-      <div class="kpi-value" id="kpi-esc">—</div>
+      <div class="kpi-label">Issues đang mở</div>
+      <div class="kpi-value" id="kpi-open">—</div>
+      <div class="kpi-unit">chưa hoàn thành</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Waiting Decisions</div>
-      <div class="kpi-value" id="kpi-wait">—</div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Quá hạn</div>
+      <div class="kpi-value" id="kpi-overdue">—</div>
+      <div class="kpi-unit">issues</div>
     </div>
   </section>
 
-  <section>
-    <h2>14 OC — Snapshot</h2>
-    <table class="oc-table">
-      <thead><tr><th>ID</th><th>Tên OC</th><th>Trục</th><th>Phase</th><th>Status</th><th>%</th><th>Next milestone</th><th>Blocker</th></tr></thead>
-      <tbody id="oc-rows"></tbody>
-    </table>
-  </section>
+  <!-- COPQ Chart -->
+  <div class="chart-section">
+    <div class="chart-section-head">
+      <h2>📊 COPQ 2026 — Chi phí thiệt hại</h2>
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <div class="tab-group">
+          <button class="tab-btn" id="tab-week"    onclick="switchView('week')">Tuần</button>
+          <button class="tab-btn active" id="tab-month"   onclick="switchView('month')">Tháng</button>
+          <button class="tab-btn" id="tab-quarter" onclick="switchView('quarter')">Quý</button>
+        </div>
+        <span class="chart-meta" id="copq-period-label">Năm 2026</span>
+      </div>
+    </div>
+    <div class="copq-canvas-wrap">
+      <canvas id="copq-chart"></canvas>
+    </div>
+    <div class="copq-summary" id="copq-summary"></div>
+  </div>
+
+  <!-- OC Snapshot -->
+  <div class="section-title">14 OC — Snapshot</div>
+  <table class="oc-table">
+    <thead><tr><th>ID</th><th>Tên OC</th><th>Trục</th><th>Phase</th><th>Status</th><th>%</th><th>Next milestone</th><th>Blocker</th></tr></thead>
+    <tbody id="oc-rows"></tbody>
+  </table>
 
   <footer class="meta">
-    <span>Source: <span id="meta-source">—</span></span> ·
-    <span>Updated: <span id="meta-time">—</span></span>
+    <span>COPQ: Supabase · quality_issue_tracking</span> ·
+    <span>Cập nhật: <span id="meta-time">—</span></span>
   </footer>
 </main>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────────
+const SB_URL  = 'https://evlrudvtoblhkfjdmmvs.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2bHJ1ZHZ0b2JsaGtmamRtbXZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNDUyMjcsImV4cCI6MjA5NDgyMTIyN30.wKv8zA43uqiqV-VnHl823TF-PrdN4ta6Ib1J1ovk8uM';
+
+// ── Helpers ───────────────────────────────────────────────────
+const fmtM     = v => v >= 1000 ? (v/1000).toFixed(2)+' tỷ' : v.toFixed(0)+' tr';
+const parseWk  = v => parseInt((v||'').toString().replace(/^W/i,'')) || 0;
+const getQ     = m => Math.ceil(m/3);
+function getISOWeek(d) {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(dt.getUTCFullYear(),0,1));
+  return Math.ceil((((dt-y0)/86400000)+1)/7);
+}
+
+// ── State ─────────────────────────────────────────────────────
+let RAW_DATA  = [];
+let COPQ_CHART = null;
+let CUR_VIEW  = 'month';   // 'week' | 'month' | 'quarter'
+
+const TODAY   = new Date();
+const CUR_WK  = getISOWeek(TODAY);
+const CUR_MO  = TODAY.getMonth() + 1;
+const CUR_Q   = getQ(CUR_MO);
+
+// ── Fetch from Supabase ───────────────────────────────────────
+async function fetchCOPQ() {
+  const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
+  const url = SB_URL+'/rest/v1/quality_issue_tracking?select=week,month,chi_phi_thiet_hai,tinh_trang,so_ngay_qua_han&limit=2000';
+  const res = await fetch(url, { headers: h });
+  if (!res.ok) throw new Error('HTTP '+res.status);
+  return res.json();
+}
+
+// ── Group & aggregate ─────────────────────────────────────────
+function aggregate(data, view) {
+  const map = {};
+  data.forEach(r => {
+    let key;
+    if      (view === 'week')    key = parseWk(r.week);
+    else if (view === 'month')   key = parseInt(r.month)||0;
+    else                         key = getQ(parseInt(r.month)||0);
+    if (!key) return;
+    if (!map[key]) map[key] = { copq:0, count:0 };
+    map[key].copq  += parseFloat(r.chi_phi_thiet_hai)||0;
+    map[key].count += 1;
+  });
+  const keys = Object.keys(map).map(Number).sort((a,b)=>a-b);
+  return { keys, copqs: keys.map(k=>(map[k].copq/1e6).toFixed(2)), counts: keys.map(k=>map[k].count) };
+}
+
+// ── Labels ────────────────────────────────────────────────────
+function makeLabels(keys, view) {
+  if (view === 'week')    return keys.map(k => 'W'+k);
+  if (view === 'month')   return keys.map(k => 'T'+k);
+  return keys.map(k => 'Q'+k);
+}
+
+function currentKey(view) {
+  if (view === 'week')    return CUR_WK;
+  if (view === 'month')   return CUR_MO;
+  return CUR_Q;
+}
+
+// ── Render chart ──────────────────────────────────────────────
+function renderCOPQ(view) {
+  const { keys, copqs, counts } = aggregate(RAW_DATA, view);
+  const labels = makeLabels(keys, view);
+  const curKey = currentKey(view);
+
+  const bgColors = keys.map(k =>
+    k === curKey ? '#0B5C2E' : '#16a34a66'
+  );
+  const borderColors = keys.map(k =>
+    k === curKey ? '#0B5C2E' : '#16a34a'
+  );
+
+  if (COPQ_CHART) { COPQ_CHART.destroy(); COPQ_CHART = null; }
+
+  COPQ_CHART = new Chart(document.getElementById('copq-chart'), {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'COPQ (triệu VNĐ)',
+          data: copqs,
+          backgroundColor: bgColors,
+          borderColor: borderColors,
+          borderWidth: 1.5,
+          borderRadius: 5,
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: 'Số issues',
+          data: counts,
+          borderColor: '#dc2626',
+          backgroundColor: '#dc262622',
+          yAxisID: 'y2',
+          tension: 0.3,
+          pointRadius: 3,
+          pointBackgroundColor: '#dc2626',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index' },
+      plugins: {
+        legend: { labels: { font: { size:11 }, boxWidth:12 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.datasetIndex === 0
+              ? ` COPQ: ${ctx.parsed.y} tr.VNĐ`
+              : ` Issues: ${ctx.parsed.y}`
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { font: { size:11 } } },
+        y: {
+          beginAtZero: true,
+          title: { display:true, text:'COPQ (tr.VNĐ)', font:{size:10} },
+          ticks: { font:{size:10} }
+        },
+        y2: {
+          beginAtZero: true,
+          position: 'right',
+          title: { display:true, text:'Số issues', font:{size:10} },
+          ticks: { font:{size:10} },
+          grid: { drawOnChartArea:false }
+        }
+      }
+    }
+  });
+
+  // Period label
+  const periodMap = { week:'Theo tuần', month:'Theo tháng', quarter:'Theo quý' };
+  document.getElementById('copq-period-label').textContent = periodMap[view]+' · Năm 2026';
+
+  // Summary chips
+  renderSummary(view, keys, copqs, counts, curKey);
+}
+
+function renderSummary(view, keys, copqs, counts, curKey) {
+  const totalCOPQ  = copqs.reduce((s,v)=>s+parseFloat(v),0);
+  const totalIssue = counts.reduce((s,v)=>s+v,0);
+  const curIdx     = keys.indexOf(curKey);
+  const curCOPQ    = curIdx >= 0 ? parseFloat(copqs[curIdx]) : 0;
+  const curCount   = curIdx >= 0 ? counts[curIdx] : 0;
+  const curLabel   = view==='week'?'W'+curKey : view==='month'?'T'+curKey : 'Q'+curKey;
+
+  const html = `
+    <div class="copq-chip highlight">
+      <div class="chip-label">COPQ ${curLabel} (hiện tại)</div>
+      <div class="chip-value">${curCOPQ.toFixed(1)} tr</div>
+    </div>
+    <div class="copq-chip warn">
+      <div class="chip-label">Tổng COPQ 2026</div>
+      <div class="chip-value">${fmtM(totalCOPQ)}</div>
+    </div>
+    <div class="copq-chip">
+      <div class="chip-label">Issues ${curLabel}</div>
+      <div class="chip-value">${curCount}</div>
+    </div>
+    <div class="copq-chip">
+      <div class="chip-label">Tổng issues 2026</div>
+      <div class="chip-value">${totalIssue}</div>
+    </div>`;
+  document.getElementById('copq-summary').innerHTML = html;
+}
+
+// ── Tab switch ────────────────────────────────────────────────
+function switchView(view) {
+  CUR_VIEW = view;
+  ['week','month','quarter'].forEach(v => {
+    document.getElementById('tab-'+v).classList.toggle('active', v === view);
+  });
+  renderCOPQ(view);
+}
+
+// ── KPI chips from raw data ───────────────────────────────────
+function updateKPIs(data) {
+  const totalCOPQ  = data.reduce((s,r)=>s+(parseFloat(r.chi_phi_thiet_hai)||0),0);
+  const isDone     = r => /hoàn thành/i.test(r.tinh_trang||'');
+  const openItems  = data.filter(r=>!isDone(r));
+  const overdue    = data.filter(r=>!isDone(r) && parseFloat(r.so_ngay_qua_han||0)>0);
+
+  document.getElementById('kpi-copq').textContent    = (totalCOPQ/1e6).toFixed(1);
+  document.getElementById('kpi-open').textContent    = openItems.length;
+  document.getElementById('kpi-overdue').textContent = overdue.length;
+  document.getElementById('meta-time').textContent   = new Date().toLocaleString('vi-VN');
+}
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  try {
+    RAW_DATA = await fetchCOPQ();
+    updateKPIs(RAW_DATA);
+    renderCOPQ(CUR_VIEW);
+  } catch(e) {
+    document.getElementById('copq-chart').closest('.chart-section')
+      .insertAdjacentHTML('beforeend',
+        `<div style="color:var(--red);font-size:.8rem;margin-top:.5rem">⚠ Không tải được COPQ: ${e.message}</div>`);
+  }
+}
+
+init();
+</script>
 
 <script src="assets/app.js"></script>
 </body>
