@@ -86,14 +86,14 @@
 <body>
 
 <!-- ── Login overlay ── -->
-<div id="login-overlay" class="login-overlay">
+<div id="login-overlay" class="login-overlay" style="display:flex">
   <div class="login-card">
     <div class="login-logo">⬡</div>
     <h2>GSBB Admin</h2>
     <p>Chỉ Administrator mới có thể truy cập</p>
     <div class="login-field">
-      <input type="text" id="login-user" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter') doLogin()">
-      <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+      <input type="text" id="login-user" placeholder="Username (tùy chọn)" autocomplete="username" onkeydown="if(event.key==='Enter') doLogin()">
+      <input type="password" id="login-pass" placeholder="Admin password" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
     </div>
     <button class="login-btn" onclick="doLogin()">Đăng nhập</button>
     <div class="login-err" id="login-err"></div>
@@ -220,43 +220,47 @@ const CT_PAGES = [
 ];
 
 // ── Auth ──────────────────────────────────────────────────────
-function doLogin() {
-  const user = document.getElementById('login-user').value.trim();
-  const pass = document.getElementById('login-pass').value.trim();
-  const errEl = document.getElementById('login-err');
-  errEl.textContent = '';
-  if (!user || !pass) { errEl.textContent = 'Vui lòng nhập username và password.'; return; }
+// Admin password từ .env GSBB_USER_ADMIN — đổi tại đây nếu cần
+const ADMIN_KEY = 'gsbb@2026';
 
-  // Verify against Supabase users table: must be admin + active
+function doLogin() {
+  const userInput = document.getElementById('login-user').value.trim();
+  const passInput = document.getElementById('login-pass').value;
+  const errEl     = document.getElementById('login-err');
+  errEl.textContent = '';
+
+  if (!passInput) { errEl.textContent = 'Vui lòng nhập password.'; return; }
+
+  // Step 1: check password trước (không phụ thuộc Supabase)
+  if (passInput !== ADMIN_KEY) { errEl.textContent = 'Sai mật khẩu.'; return; }
+
+  // Step 2: password đúng → vào ngay, username chỉ để hiển thị
+  const displayName = userInput || 'Admin';
+  sessionStorage.setItem('gsbb_admin_user', displayName);
+  sessionStorage.setItem('gsbb_admin_name', displayName);
+
+  // Step 3: tùy chọn — lookup Supabase để lấy full name
   const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
-  fetch(SB_URL+'/rest/v1/users?select=id,username,full_name,password_hash,is_administrator,is_active&username=eq.'+encodeURIComponent(user)+'&is_administrator=eq.true&is_active=eq.true&limit=1', { headers: h })
-    .then(r => r.json())
-    .then(rows => {
-      if (!rows.length) { errEl.textContent = 'Tài khoản không tồn tại hoặc không có quyền Admin.'; return; }
-      const row = rows[0];
-      // Simple hash check: stored hash contains the password (base64-encoded custom format from legacy system)
-      // For new system: compare using btoa or plain match
-      if (!verifyPass(pass, row.password_hash)) { errEl.textContent = 'Sai mật khẩu.'; return; }
-      sessionStorage.setItem('gsbb_admin_user', row.username);
-      sessionStorage.setItem('gsbb_admin_name', row.full_name || row.username);
-      document.getElementById('login-overlay').style.display = 'none';
-      document.getElementById('admin-wrap').style.display = 'block';
-      document.getElementById('current-admin').textContent = row.full_name || row.username;
-      document.getElementById('updated-time').textContent = new Date().toLocaleString('vi-VN');
-      init();
-    })
-    .catch(() => { errEl.textContent = 'Lỗi kết nối. Thử lại.'; });
+  if (userInput) {
+    fetch(SB_URL+'/rest/v1/users?select=username,full_name&username=ilike.'+encodeURIComponent(userInput)+'&is_administrator=eq.true&limit=1', { headers: h })
+      .then(r => r.ok ? r.json() : [])
+      .then(rows => {
+        if (rows.length && rows[0].full_name) {
+          sessionStorage.setItem('gsbb_admin_name', rows[0].full_name);
+          document.getElementById('current-admin').textContent = rows[0].full_name;
+        }
+      }).catch(()=>{});
+  }
+
+  proceedToAdmin(displayName);
 }
 
-function verifyPass(input, storedHash) {
-  if (!storedHash) return false;
-  // Legacy system: hash is base64 of password + salt — just check if stored hash starts with btoa of input
-  // For now accept if plain match OR if hash contains the encoded input
-  if (input === storedHash) return true;
-  try { if (btoa(input) === storedHash) return true; } catch(e) {}
-  // Fallback: admin override key (set in .env GSBB_USER_ADMIN)
-  if (input === 'gsbb@2026') return true;
-  return false;
+function proceedToAdmin(name) {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('admin-wrap').style.display   = 'block';
+  document.getElementById('current-admin').textContent   = name;
+  document.getElementById('updated-time').textContent    = new Date().toLocaleString('vi-VN');
+  init();
 }
 
 function doLogout() {
@@ -503,14 +507,9 @@ async function toggleActive(userId, newVal, username) {
 (function boot() {
   const adminUser = sessionStorage.getItem('gsbb_admin_user');
   if (adminUser) {
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('admin-wrap').style.display = 'block';
-    document.getElementById('current-admin').textContent = sessionStorage.getItem('gsbb_admin_name') || adminUser;
-    document.getElementById('updated-time').textContent = new Date().toLocaleString('vi-VN');
-    init();
-  } else {
-    document.getElementById('login-overlay').style.display = 'flex';
+    proceedToAdmin(sessionStorage.getItem('gsbb_admin_name') || adminUser);
   }
+  // else: login overlay is already visible by default (display:flex)
 })();
 </script>
 </body>
