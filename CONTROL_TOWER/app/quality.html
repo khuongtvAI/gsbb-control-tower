@@ -118,7 +118,7 @@ canvas { max-height:260px; }
   <!-- Main content (hidden until loaded) -->
   <div id="main-content" style="display:none">
 
-    <!-- ── Main filter: Year / Quarter / Week ── -->
+    <!-- ── Main filter: Year / Quarter / Month / Week ── -->
     <div class="main-filter-bar" id="main-filter-bar">
       <div class="mf-group">
         <label>Năm</label>
@@ -128,6 +128,11 @@ canvas { max-height:260px; }
       <div class="mf-group">
         <label>Quý</label>
         <select id="mf-quarter" onchange="onQuarterChange()"><option value="">Tất cả quý</option></select>
+      </div>
+      <div class="mf-divider"></div>
+      <div class="mf-group">
+        <label>Tháng</label>
+        <select id="mf-month" onchange="onMonthChange()"><option value="">Tất cả tháng</option></select>
       </div>
       <div class="mf-divider"></div>
       <div class="mf-group">
@@ -265,7 +270,7 @@ let ALL_DATA       = [];
 let LIST_WEEK_DATA = [];
 let DISPLAY_DATA   = [];
 const CHARTS = {};
-const FILTER_STATE = { year: null, quarter: null, week: null };
+const FILTER_STATE = { year: null, quarter: null, month: null, week: null };
 
 // ── Fetch ─────────────────────────────────────────────────────
 async function fetchData() {
@@ -324,12 +329,26 @@ function populateQuarterSelect(year) {
   });
 }
 
-function populateWeekSelect(year, quarter) {
+function populateMonthSelect(year, quarter) {
+  const sel = document.getElementById('mf-month');
+  sel.innerHTML = '<option value="">Tất cả tháng</option>';
+  let rows = LIST_WEEK_DATA;
+  if (year)    rows = rows.filter(r=>r.years===year);
+  if (quarter) rows = rows.filter(r=>r.quarter===quarter);
+  const months = [...new Set(rows.map(r=>r.months).filter(Boolean))].sort((a,b)=>a-b);
+  months.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = 'Tháng '+m; sel.appendChild(o);
+  });
+}
+
+function populateWeekSelect(year, quarter, month) {
   const sel = document.getElementById('mf-week');
   sel.innerHTML = '<option value="">Tất cả tuần</option>';
   let rows = LIST_WEEK_DATA;
   if (year)    rows = rows.filter(r=>r.years===year);
   if (quarter) rows = rows.filter(r=>r.quarter===quarter);
+  if (month)   rows = rows.filter(r=>r.months===month);
   [...rows].sort((a,b)=>a.weeks-b.weeks).forEach(r => {
     const o = document.createElement('option');
     o.value = r.weeks;
@@ -339,10 +358,11 @@ function populateWeekSelect(year, quarter) {
 }
 
 function detectCurrentPeriod() {
-  const today = new Date();
-  const curYear = today.getFullYear();
-  const curWeek = getISOWeek(today);
-  const curQ    = getQuarter(today.getMonth()+1);
+  const today    = new Date();
+  const curYear  = today.getFullYear();
+  const curMonth = today.getMonth() + 1;
+  const curWeek  = getISOWeek(today);
+  const curQ     = getQuarter(curMonth);
 
   const ySel = document.getElementById('mf-year');
   if ([...ySel.options].find(o=>parseInt(o.value)===curYear)) {
@@ -354,7 +374,13 @@ function detectCurrentPeriod() {
   if ([...qSel.options].find(o=>parseInt(o.value)===curQ)) {
     qSel.value = curQ; FILTER_STATE.quarter = curQ;
   }
-  populateWeekSelect(FILTER_STATE.year, FILTER_STATE.quarter);
+  populateMonthSelect(FILTER_STATE.year, FILTER_STATE.quarter);
+
+  const mSel = document.getElementById('mf-month');
+  if ([...mSel.options].find(o=>parseInt(o.value)===curMonth)) {
+    mSel.value = curMonth; FILTER_STATE.month = curMonth;
+  }
+  populateWeekSelect(FILTER_STATE.year, FILTER_STATE.quarter, FILTER_STATE.month);
 
   const wSel = document.getElementById('mf-week');
   if ([...wSel.options].find(o=>parseInt(o.value)===curWeek)) {
@@ -367,6 +393,7 @@ function updateFilterStatus() {
   const parts = [];
   if (FILTER_STATE.year)    parts.push('Năm '+FILTER_STATE.year);
   if (FILTER_STATE.quarter) parts.push('Q'+FILTER_STATE.quarter);
+  if (FILTER_STATE.month)   parts.push('T'+FILTER_STATE.month);
   if (FILTER_STATE.week)    parts.push('W'+FILTER_STATE.week);
   document.getElementById('filter-status').textContent = parts.length ? parts.join(' · ') : 'Toàn bộ dữ liệu';
 }
@@ -375,16 +402,25 @@ function updateFilterStatus() {
 function onYearChange() {
   const v = document.getElementById('mf-year').value;
   FILTER_STATE.year = v ? parseInt(v) : null;
-  FILTER_STATE.quarter = null; FILTER_STATE.week = null;
+  FILTER_STATE.quarter = null; FILTER_STATE.month = null; FILTER_STATE.week = null;
   populateQuarterSelect(FILTER_STATE.year);
-  populateWeekSelect(FILTER_STATE.year, null);
+  populateMonthSelect(FILTER_STATE.year, null);
+  populateWeekSelect(FILTER_STATE.year, null, null);
   applyMainFilter();
 }
 function onQuarterChange() {
   const v = document.getElementById('mf-quarter').value;
   FILTER_STATE.quarter = v ? parseInt(v) : null;
+  FILTER_STATE.month = null; FILTER_STATE.week = null;
+  populateMonthSelect(FILTER_STATE.year, FILTER_STATE.quarter);
+  populateWeekSelect(FILTER_STATE.year, FILTER_STATE.quarter, null);
+  applyMainFilter();
+}
+function onMonthChange() {
+  const v = document.getElementById('mf-month').value;
+  FILTER_STATE.month = v ? parseInt(v) : null;
   FILTER_STATE.week = null;
-  populateWeekSelect(FILTER_STATE.year, FILTER_STATE.quarter);
+  populateWeekSelect(FILTER_STATE.year, FILTER_STATE.quarter, FILTER_STATE.month);
   applyMainFilter();
 }
 function onWeekChange() {
@@ -393,10 +429,11 @@ function onWeekChange() {
   applyMainFilter();
 }
 function resetMainFilter() {
-  FILTER_STATE.year = null; FILTER_STATE.quarter = null; FILTER_STATE.week = null;
+  FILTER_STATE.year = null; FILTER_STATE.quarter = null; FILTER_STATE.month = null; FILTER_STATE.week = null;
   document.getElementById('mf-year').value = '';
   populateQuarterSelect(null);
-  populateWeekSelect(null, null);
+  populateMonthSelect(null, null);
+  populateWeekSelect(null, null, null);
   applyMainFilter();
 }
 
@@ -404,15 +441,18 @@ function resetMainFilter() {
 function applyMainFilter() {
   let data = ALL_DATA;
   if (FILTER_STATE.week) {
-    // week column stores "W21" format → strip W prefix before compare
+    // Most specific: filter by exact week (week column stores "W21" → strip W prefix)
     data = data.filter(r => parseWeekNum(r.week) === FILTER_STATE.week);
-  } else if (FILTER_STATE.quarter && FILTER_STATE.year) {
-    const wNums = LIST_WEEK_DATA
-      .filter(r => r.years === FILTER_STATE.year && r.quarter === FILTER_STATE.quarter)
-      .map(r => r.weeks);
+  } else if (FILTER_STATE.month) {
+    // Filter by month: use list_week to get week numbers belonging to this month
+    let rows = LIST_WEEK_DATA.filter(r => r.months === FILTER_STATE.month);
+    if (FILTER_STATE.year) rows = rows.filter(r => r.years === FILTER_STATE.year);
+    const wNums = rows.map(r => r.weeks);
     data = data.filter(r => wNums.includes(parseWeekNum(r.week)));
   } else if (FILTER_STATE.quarter) {
-    const wNums = LIST_WEEK_DATA.filter(r => r.quarter === FILTER_STATE.quarter).map(r => r.weeks);
+    let rows = LIST_WEEK_DATA.filter(r => r.quarter === FILTER_STATE.quarter);
+    if (FILTER_STATE.year) rows = rows.filter(r => r.years === FILTER_STATE.year);
+    const wNums = rows.map(r => r.weeks);
     data = data.filter(r => wNums.includes(parseWeekNum(r.week)));
   } else if (FILTER_STATE.year) {
     const wNums = LIST_WEEK_DATA.filter(r => r.years === FILTER_STATE.year).map(r => r.weeks);
