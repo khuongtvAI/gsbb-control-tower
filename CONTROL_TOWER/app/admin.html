@@ -147,10 +147,10 @@
     <h2>GSBB Admin</h2>
     <p>Chỉ Administrator mới có thể truy cập</p>
     <div class="login-field">
-      <input type="text" id="login-user" placeholder="Username (tùy chọn)" autocomplete="username" onkeydown="if(event.key==='Enter') doLogin()">
-      <input type="password" id="login-pass" placeholder="Admin password" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+      <input type="text" id="login-user" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter') doLogin()">
+      <input type="password" id="login-pass" placeholder="Mật khẩu" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
     </div>
-    <button class="login-btn" onclick="doLogin()">Đăng nhập</button>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Đăng nhập</button>
     <div class="login-err" id="login-err"></div>
   </div>
 </div>
@@ -441,39 +441,51 @@ const FN_ICON = {
 };
 
 // ── Auth ──────────────────────────────────────────────────────
-// Admin password từ .env GSBB_USER_ADMIN — đổi tại đây nếu cần
-const ADMIN_KEY = 'gsbb@2026';
-
-function doLogin() {
-  const userInput = document.getElementById('login-user').value.trim();
-  const passInput = document.getElementById('login-pass').value;
-  const errEl     = document.getElementById('login-err');
+async function doLogin() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  const errEl    = document.getElementById('login-err');
+  const btn      = document.getElementById('login-btn');
   errEl.textContent = '';
 
-  if (!passInput) { errEl.textContent = 'Vui lòng nhập password.'; return; }
+  if (!username) { errEl.textContent = 'Vui lòng nhập username.'; return; }
+  if (!password) { errEl.textContent = 'Vui lòng nhập mật khẩu.'; return; }
 
-  // Step 1: check password trước (không phụ thuộc Supabase)
-  if (passInput !== ADMIN_KEY) { errEl.textContent = 'Sai mật khẩu.'; return; }
+  btn.disabled    = true;
+  btn.textContent = 'Đang kiểm tra…';
 
-  // Step 2: password đúng → vào ngay, username chỉ để hiển thị
-  const displayName = userInput || 'Admin';
-  sessionStorage.setItem('gsbb_admin_user', displayName);
-  sessionStorage.setItem('gsbb_admin_name', displayName);
+  try {
+    const hash = await sha256hex(password);
+    const url  = `${SB_URL}/rest/v1/users`
+               + `?select=id,username,full_name,is_active,is_administrator`
+               + `&username=eq.${encodeURIComponent(username)}`
+               + `&password_hash=eq.${hash}`
+               + `&limit=1`;
+    const res  = await fetch(url, { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON } });
+    if (!res.ok) throw new Error('Lỗi kết nối Supabase ('+res.status+').');
+    const rows = await res.json();
 
-  // Step 3: tùy chọn — lookup Supabase để lấy full name
-  const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
-  if (userInput) {
-    fetch(SB_URL+'/rest/v1/users?select=username,full_name&username=ilike.'+encodeURIComponent(userInput)+'&is_administrator=eq.true&limit=1', { headers: h })
-      .then(r => r.ok ? r.json() : [])
-      .then(rows => {
-        if (rows.length && rows[0].full_name) {
-          sessionStorage.setItem('gsbb_admin_name', rows[0].full_name);
-          document.getElementById('current-admin').textContent = rows[0].full_name;
-        }
-      }).catch(()=>{});
+    if (!rows.length) {
+      errEl.textContent = 'Sai username hoặc mật khẩu.'; return;
+    }
+    const user = rows[0];
+    if (!user.is_active) {
+      errEl.textContent = 'Tài khoản đã bị vô hiệu hóa.'; return;
+    }
+    if (!user.is_administrator) {
+      errEl.textContent = 'Tài khoản không có quyền Admin.'; return;
+    }
+
+    const displayName = user.full_name || user.username;
+    sessionStorage.setItem('gsbb_admin_user', user.username);
+    sessionStorage.setItem('gsbb_admin_name', displayName);
+    proceedToAdmin(displayName);
+  } catch(e) {
+    errEl.textContent = e.message || 'Lỗi đăng nhập.';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Đăng nhập';
   }
-
-  proceedToAdmin(displayName);
 }
 
 function proceedToAdmin(name) {
