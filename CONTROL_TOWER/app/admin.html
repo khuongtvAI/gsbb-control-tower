@@ -864,6 +864,11 @@ function closeAddUser() {
   document.getElementById('add-user-modal').classList.add('hidden');
 }
 
+async function sha256hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
 async function submitAddUser() {
   const username  = document.getElementById('nu-username').value.trim();
   const full_name = document.getElementById('nu-fullname').value.trim();
@@ -892,7 +897,7 @@ async function submitAddUser() {
 
   const payload = {
     username, full_name, email, phone,
-    password_hash: password,
+    password_hash: await sha256hex(password),
     rank_code,
     depart_code: depart ? parseInt(depart) : null,
     role_code:   role   ? parseInt(role)   : null,
