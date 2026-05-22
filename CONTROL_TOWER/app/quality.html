@@ -6,6 +6,7 @@
 <title>Quality Issues 2026 — GSBB Control Tower</title>
 <link rel="stylesheet" href="assets/ct-shared.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 /* ── Extra Quality-page styles ───────────────────────────────── */
 .kpi-unit { font-size:0.72rem; color:var(--muted); margin-top:0.15rem; }
@@ -77,6 +78,23 @@ canvas { max-height:260px; }
 .mf-reset { font-size:0.75rem; padding:0.35rem 0.85rem; border:1.5px solid var(--border); border-radius:7px; background:white; color:var(--muted); cursor:pointer; transition:all .15s; font-weight:600; }
 .mf-reset:hover { border-color:var(--red); color:var(--red); background:#fff7f7; }
 .mf-status { margin-left:auto; font-size:0.75rem; color:var(--green); font-weight:600; white-space:nowrap; padding:0.3rem 0.75rem; background:#f0fdf4; border-radius:20px; border:1px solid var(--border); }
+
+/* ── Import Excel Modal ──────────────────────────────────────── */
+.import-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.import-modal { background:white; border-radius:12px; padding:1.75rem 2rem; width:min(560px,92vw); box-shadow:0 20px 60px rgba(0,0,0,.2); max-height:85vh; overflow-y:auto; }
+.import-modal h3 { font-size:1rem; font-weight:700; margin-bottom:1.25rem; color:#111; }
+.import-modal label { font-size:0.78rem; font-weight:600; color:#374151; display:block; margin-bottom:0.4rem; }
+.import-modal select, .import-modal input[type=file] { width:100%; font-size:0.85rem; padding:0.45rem 0.65rem; border:1.5px solid var(--border); border-radius:7px; margin-bottom:1rem; color:var(--text); background:white; }
+.import-modal select:focus, .import-modal input:focus { outline:none; border-color:var(--green); }
+.import-preview-box { background:#f8fdf9; border:1px solid var(--border); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; min-height:52px; font-size:0.8rem; color:#374151; }
+.import-log-box { background:#1a1a2e; color:#86efac; border-radius:8px; padding:1rem 1.25rem; font-family:monospace; font-size:0.78rem; line-height:1.7; min-height:120px; max-height:260px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; }
+.import-btn-row { display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.25rem; }
+.btn-import { padding:0.5rem 1.25rem; border-radius:7px; font-size:0.85rem; font-weight:600; cursor:pointer; border:none; }
+.btn-import.primary { background:var(--green); color:white; }
+.btn-import.primary:hover { background:#0a4f27; }
+.btn-import.primary:disabled { background:#9ca3af; cursor:not-allowed; }
+.btn-import.secondary { background:white; color:var(--text); border:1.5px solid var(--border); }
+.btn-import.secondary:hover { border-color:var(--green); color:var(--green); }
 </style>
 </head>
 <body>
@@ -107,7 +125,8 @@ canvas { max-height:260px; }
     </div>
     <div style="margin-left:auto;text-align:right;font-size:0.72rem;color:#9ca3af">
       Nguồn: Supabase · quality_issue_tracking<br>
-      <span id="updated-time">—</span>
+      <span id="updated-time">—</span><br>
+      <button onclick="openImport()" style="margin-top:0.5rem;padding:0.35rem 0.85rem;border:1.5px solid rgba(255,255,255,.35);border-radius:7px;background:rgba(255,255,255,.12);color:white;font-size:0.72rem;font-weight:600;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.22)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">📥 Import Excel</button>
     </div>
   </div>
 
@@ -233,6 +252,40 @@ canvas { max-height:260px; }
 
   </div><!-- /main-content -->
 </main>
+
+<!-- ── Import Excel Modal ── -->
+<div id="import-modal" class="import-modal-overlay" style="display:none" onclick="if(event.target===this)closeImport()">
+  <div class="import-modal">
+    <h3>📥 Import dữ liệu từ Excel → quality_issue_tracking</h3>
+
+    <!-- Step 1: File picker -->
+    <div id="import-step1">
+      <label>Chọn file Excel (.xlsx / .xls):</label>
+      <input type="file" id="import-file" accept=".xlsx,.xls" onchange="onImportFileChange(event)">
+      <p style="font-size:0.75rem;color:#6b7280;margin:0">Hỗ trợ file <em>Bảng theo dõi issue QC 2026</em>. Dữ liệu đã tồn tại (theo mã NCR) sẽ được bỏ qua tự động, chỉ thêm mới.</p>
+    </div>
+
+    <!-- Step 2: Sheet selector + preview -->
+    <div id="import-step2" style="display:none">
+      <label>Chọn sheet:</label>
+      <select id="import-sheet" onchange="onSheetChange()"></select>
+      <div class="import-preview-box" id="import-preview">Đang phân tích…</div>
+      <div class="import-btn-row">
+        <button class="btn-import secondary" onclick="document.getElementById('import-step2').style.display='none';document.getElementById('import-step1').style.display='block'">← Chọn lại file</button>
+        <button class="btn-import primary" id="import-run-btn" onclick="runImport()">🚀 Bắt đầu import</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Progress log -->
+    <div id="import-step3" style="display:none">
+      <div class="import-log-box" id="import-log"></div>
+      <div class="import-btn-row">
+        <button class="btn-import secondary" onclick="closeImport()">Đóng</button>
+        <button class="btn-import primary" onclick="location.reload()">🔄 Tải lại trang</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── Config ────────────────────────────────────────────────────
@@ -730,6 +783,217 @@ function applyFilter() {
 
 // ── Run ───────────────────────────────────────────────────────
 init();
+
+// ── Import Excel ──────────────────────────────────────────────
+const COL_MAP = [
+  { idx:0,  col:'stt',                  type:'int'    },
+  { idx:1,  col:'month',                type:'int'    },
+  { idx:2,  col:'week',                 type:'str'    },
+  { idx:3,  col:'ngay_phat_hanh',       type:'date'   },
+  { idx:4,  col:'ma_so_ncr',            type:'str'    },
+  { idx:5,  col:'phan_loai',            type:'str'    },
+  { idx:6,  col:'level_claim',          type:'str'    },
+  { idx:7,  col:'bo_phan',              type:'str'    },
+  { idx:8,  col:'noi_phat_sinh',        type:'str'    },
+  { idx:9,  col:'khach_hang_vender',    type:'str'    },
+  { idx:10, col:'loai_khach_hang',      type:'str'    },
+  { idx:11, col:'code_sp',              type:'str'    },
+  { idx:12, col:'loai_san_pham',        type:'str'    },
+  { idx:13, col:'model',                type:'str'    },
+  { idx:14, col:'so_luong_lot',         type:'int'    },
+  { idx:15, col:'so_luong_kiem_tra',    type:'int'    },
+  { idx:16, col:'so_luong_ng',          type:'int'    },
+  { idx:17, col:'ty_le_loi',            type:'float'  },
+  { idx:18, col:'ten_loi',              type:'str'    },
+  { idx:19, col:'lap_lai_loi_moi',      type:'str'    },
+  { idx:20, col:'action_ngan_han',      type:'str'    },
+  { idx:21, col:'nguyen_nhan',          type:'str'    },
+  { idx:22, col:'action_cai_tien',      type:'str'    },
+  { idx:23, col:'ban_chat',             type:'str'    },
+  { idx:24, col:'deadline_tra_loi',     type:'date'   },
+  { idx:25, col:'ngay_tra_loi_thuc_te', type:'date'   },
+  { idx:26, col:'so_ngay_qua_han',      type:'int'    },
+  { idx:27, col:'nha_may',              type:'str'    },
+  { idx:28, col:'chi_phi_thiet_hai',    type:'bigint' },
+  { idx:29, col:'so_tien_boi_hoan',     type:'bigint' },
+  { idx:30, col:'bphan_trach_nhiem',    type:'str'    },
+  { idx:31, col:'pic',                  type:'str'    },
+  { idx:32, col:'quan_ly_bo_phan',      type:'str'    },
+  { idx:33, col:'tinh_trang',           type:'str'    },
+  { idx:34, col:'sao_den',              type:'str'    },
+  { idx:35, col:'sao_vang',             type:'str'    },
+  { idx:36, col:'theo_doi_ket_qua',     type:'str'    },
+  { idx:37, col:'ly_do',                type:'str'    },
+  { idx:38, col:'ghi_chu',              type:'str'    },
+];
+
+let importWB   = null;
+let importRows = [];
+
+function openImport() {
+  document.getElementById('import-modal').style.display = 'flex';
+  document.getElementById('import-step1').style.display = 'block';
+  document.getElementById('import-step2').style.display = 'none';
+  document.getElementById('import-step3').style.display = 'none';
+  document.getElementById('import-file').value = '';
+  importWB = null; importRows = [];
+}
+function closeImport() {
+  document.getElementById('import-modal').style.display = 'none';
+}
+
+function onImportFileChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      importWB = XLSX.read(evt.target.result, { type:'binary', cellDates:false });
+      const sheetSel = document.getElementById('import-sheet');
+      sheetSel.innerHTML = '';
+      importWB.SheetNames.forEach(name => {
+        const o = document.createElement('option');
+        o.value = name; o.textContent = name;
+        sheetSel.appendChild(o);
+      });
+      const preferred = ['Total Quality Issue','IQC','PQC','OQC','CS'];
+      const found = importWB.SheetNames.find(n => preferred.includes(n));
+      if (found) sheetSel.value = found;
+      document.getElementById('import-step1').style.display = 'none';
+      document.getElementById('import-step2').style.display = 'block';
+      onSheetChange();
+    } catch(err) {
+      alert('Không đọc được file: ' + err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function detectHeaderRow(ws) {
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:Z1');
+  for (let r = 0; r < 5; r++) {
+    let strCount = 0, total = 0;
+    for (let c = range.s.c; c <= Math.min(range.e.c, range.s.c + 19); c++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c })];
+      if (cell) { total++; if (cell.t === 's') strCount++; }
+    }
+    if (total > 0 && strCount / total >= 0.4) return r;
+  }
+  return 2;
+}
+
+function onSheetChange() {
+  if (!importWB) return;
+  const sheetName = document.getElementById('import-sheet').value;
+  const ws = importWB.Sheets[sheetName];
+  const preview = document.getElementById('import-preview');
+  if (!ws || !ws['!ref']) {
+    preview.innerHTML = '<span style="color:#9ca3af">Sheet trống hoặc không có dữ liệu.</span>';
+    importRows = []; return;
+  }
+  const headerRow = detectHeaderRow(ws);
+  const allRows = XLSX.utils.sheet_to_json(ws, { header:1, defval:null });
+  importRows = allRows.slice(headerRow + 1).filter(row =>
+    row && row[4] != null && String(row[4]).trim() !== ''
+  );
+  const sampleNCRs = importRows.slice(0, 5).map(r => r[4]).filter(Boolean);
+  preview.innerHTML = `<div style="font-size:0.82rem;color:#374151">
+    <div style="margin-bottom:0.4rem"><strong>Sheet:</strong> ${sheetName} &nbsp;|&nbsp; <strong>Dòng header:</strong> ${headerRow + 1} &nbsp;|&nbsp; <strong>Dữ liệu:</strong> ${importRows.length} dòng</div>
+    <div style="color:#6b7280;font-size:0.75rem">5 mã NCR đầu: ${sampleNCRs.join(', ') || '(trống)'}</div>
+  </div>`;
+}
+
+function convertDate(raw) {
+  if (raw === null || raw === undefined || raw === '') return null;
+  if (typeof raw === 'number' && raw > 25000 && raw < 60000) {
+    return new Date((raw - 25569) * 86400000).toISOString().split('T')[0];
+  }
+  const s = String(raw).trim();
+  if (!s) return null;
+  const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+  return s;
+}
+
+async function runImport() {
+  if (!importRows.length) { alert('Không có dữ liệu để import.'); return; }
+  const btn = document.getElementById('import-run-btn');
+  btn.disabled = true;
+  document.getElementById('import-step2').style.display = 'none';
+  document.getElementById('import-step3').style.display = 'block';
+  const log = document.getElementById('import-log');
+  log.textContent = '⏳ Đang lấy danh sách mã NCR hiện có từ Supabase…';
+
+  try {
+    const h = { 'apikey':SB_ANON, 'Authorization':'Bearer '+SB_ANON };
+    const existing = new Set();
+    let offset = 0;
+    const PAGE = 1000;
+    while (true) {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/quality_issue_tracking?select=ma_so_ncr&limit=${PAGE}&offset=${offset}`,
+        { headers: h }
+      );
+      if (!res.ok) throw new Error('Fetch NCR list: HTTP ' + res.status);
+      const data = await res.json();
+      data.forEach(r => { if (r.ma_so_ncr) existing.add(String(r.ma_so_ncr).trim()); });
+      if (data.length < PAGE) break;
+      offset += PAGE;
+    }
+    log.textContent += `\n✅ Đã lấy ${existing.size} mã NCR hiện có.`;
+
+    const newRows = [];
+    let skipped = 0;
+    for (const row of importRows) {
+      const ncr = row[4] != null ? String(row[4]).trim() : '';
+      if (!ncr || existing.has(ncr)) { skipped++; continue; }
+      const obj = {};
+      for (const { idx, col, type } of COL_MAP) {
+        const raw = row[idx];
+        if (raw === null || raw === undefined || raw === '') { obj[col] = null; continue; }
+        if (type === 'int')    { const n = parseInt(raw);   obj[col] = isNaN(n) ? null : n; }
+        else if (type === 'float')  { const n = parseFloat(raw); obj[col] = isNaN(n) ? null : n; }
+        else if (type === 'bigint') { const n = parseInt(raw);   obj[col] = isNaN(n) ? null : n; }
+        else if (type === 'date')   { obj[col] = convertDate(raw); }
+        else                        { obj[col] = String(raw).trim() || null; }
+      }
+      newRows.push(obj);
+    }
+    log.textContent += `\n📊 Phân tích: ${newRows.length} mới · ${skipped} bỏ qua (đã có / trống NCR).`;
+
+    if (!newRows.length) {
+      log.textContent += '\n\n✅ Không có dữ liệu mới — tất cả đã tồn tại trong hệ thống.';
+      btn.disabled = false; return;
+    }
+
+    const BATCH = 100;
+    let inserted = 0, errors = 0;
+    for (let i = 0; i < newRows.length; i += BATCH) {
+      const batch = newRows.slice(i, i + BATCH);
+      const res = await fetch(`${SB_URL}/rest/v1/quality_issue_tracking`, {
+        method: 'POST',
+        headers: { ...h, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
+        body: JSON.stringify(batch)
+      });
+      if (res.ok) {
+        inserted += batch.length;
+        log.textContent += `\n✅ Batch ${Math.floor(i/BATCH)+1}: thêm ${batch.length} dòng (tổng ${inserted}).`;
+      } else {
+        const errText = await res.text();
+        errors += batch.length;
+        log.textContent += `\n❌ Batch ${Math.floor(i/BATCH)+1} lỗi: ${errText.slice(0,300)}`;
+      }
+      log.scrollTop = log.scrollHeight;
+    }
+
+    log.textContent += `\n\n🎉 Hoàn tất: ${inserted} thêm mới · ${skipped} bỏ qua · ${errors} lỗi.`;
+    if (inserted > 0) log.textContent += '\nBấm "Tải lại trang" để xem dữ liệu mới.';
+  } catch(err) {
+    log.textContent += '\n❌ Lỗi: ' + err.message;
+  }
+  btn.disabled = false;
+  log.scrollTop = log.scrollHeight;
+}
 </script>
 </body>
 </html>
