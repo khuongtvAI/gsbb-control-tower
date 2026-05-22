@@ -78,6 +78,10 @@
 /* ── Delete button ───────────────────────────────────────────── */
 .btn-del { background:none; border:none; cursor:pointer; font-size:0.95rem; padding:0.1rem 0.3rem; border-radius:5px; opacity:0.35; transition:opacity .15s, background .15s; }
 .btn-del:hover { opacity:1; background:#fee2e2; }
+.chk-col { width:32px; text-align:center; }
+.chk-col input[type=checkbox] { width:15px; height:15px; cursor:pointer; accent-color:var(--green); }
+.btn-danger { background:#dc2626; color:white; border-color:#dc2626; }
+.btn-danger:hover { background:#b91c1c; border-color:#b91c1c; }
 
 /* ── Add User modal ──────────────────────────────────────────── */
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:8000; }
@@ -192,6 +196,7 @@
       <div class="toolbar">
         <input type="text" id="user-search2" placeholder="🔍 Tìm user..." oninput="renderUserTable(true)">
         <label><input type="checkbox" id="show-inactive2" onchange="renderUserTable(true)"> Hiển thị inactive</label>
+        <button id="bulk-del-btn" class="btn btn-danger" onclick="bulkDeleteUsers()" style="display:none">🗑 Xóa đã chọn (<span id="sel-count">0</span>)</button>
         <button class="btn btn-green" onclick="openAddUser()">＋ Thêm User</button>
       </div>
     </div>
@@ -199,6 +204,7 @@
       <table class="users-tbl">
         <thead>
           <tr>
+            <th class="chk-col"><input type="checkbox" id="select-all-cb" onchange="toggleSelectAll(this)" title="Chọn tất cả trang này"></th>
             <th>#</th>
             <th>Username</th>
             <th>Họ tên</th>
@@ -408,7 +414,8 @@ function doLogout() {
 }
 
 // ── State ─────────────────────────────────────────────────────
-let ALL_USERS  = [];
+let ALL_USERS    = [];
+let SELECTED_IDS = new Set();
 
 // ── Fetch ─────────────────────────────────────────────────────
 async function fetchUsers() {
@@ -462,7 +469,7 @@ const PAGE_SIZE = 15;
 let USER_PAGE   = 1;
 
 function renderUserTable(resetPage) {
-  if (resetPage) USER_PAGE = 1;
+  if (resetPage) { USER_PAGE = 1; SELECTED_IDS.clear(); updateBulkBar(); }
   const q           = (document.getElementById('user-search2')?.value||'').toLowerCase();
   const showInactive = document.getElementById('show-inactive2')?.checked;
   const filtered = ALL_USERS.filter(u => {
@@ -482,6 +489,7 @@ function renderUserTable(resetPage) {
   const tbody = document.getElementById('user-tbody');
   tbody.innerHTML = page.map((u, i) => `
     <tr>
+      <td class="chk-col"><input type="checkbox" class="row-cb" data-id="${u.id}" ${SELECTED_IDS.has(u.id)?'checked':''} onchange="toggleRowSelect('${u.id}')"></td>
       <td style="color:var(--muted)">${start + i + 1}</td>
       <td><strong>${u.username}</strong></td>
       <td>${u.full_name||'—'}</td>
@@ -501,6 +509,8 @@ function renderUserTable(resetPage) {
         <button class="btn-del" title="Xóa user ${u.username}" onclick="deleteUser('${u.id}','${u.username}')">🗑</button>
       </td>
     </tr>`).join('');
+
+  updateSelectAllCb();
 
   // Update section badge
   const active = ALL_USERS.filter(u=>u.is_active).length;
@@ -693,6 +703,80 @@ function showPermStatus(msg, isErr) {
   el.textContent = msg;
   el.className = 'save-status' + (isErr?' err':'');
   setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+// ── Bulk select ───────────────────────────────────────────────
+function toggleRowSelect(userId) {
+  if (SELECTED_IDS.has(userId)) SELECTED_IDS.delete(userId);
+  else SELECTED_IDS.add(userId);
+  updateBulkBar();
+  updateSelectAllCb();
+}
+
+function toggleSelectAll(cb) {
+  document.querySelectorAll('#user-tbody .row-cb').forEach(box => {
+    box.checked = cb.checked;
+    if (cb.checked) SELECTED_IDS.add(box.dataset.id);
+    else SELECTED_IDS.delete(box.dataset.id);
+  });
+  updateBulkBar();
+}
+
+function updateSelectAllCb() {
+  const boxes = Array.from(document.querySelectorAll('#user-tbody .row-cb'));
+  const cb = document.getElementById('select-all-cb');
+  if (!cb) return;
+  const all = boxes.length > 0 && boxes.every(b => b.checked);
+  const any = boxes.some(b => b.checked);
+  cb.checked = all;
+  cb.indeterminate = any && !all;
+}
+
+function updateBulkBar() {
+  const n = SELECTED_IDS.size;
+  const btn = document.getElementById('bulk-del-btn');
+  const cnt = document.getElementById('sel-count');
+  if (btn) btn.style.display = n > 0 ? '' : 'none';
+  if (cnt) cnt.textContent = n;
+}
+
+async function bulkDeleteUsers() {
+  const ids = Array.from(SELECTED_IDS);
+  if (!ids.length) return;
+  const usernames = ids.map(id => ALL_USERS.find(u => u.id === id)?.username).filter(Boolean);
+  if (!confirm(`Xóa ${ids.length} user?\n\n${usernames.join(', ')}\n\nThao tác này không thể hoàn tác.`)) return;
+
+  const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
+  try {
+    // Xóa users_functions trước
+    if (usernames.length) {
+      await fetch(SB_URL+'/rest/v1/users_functions?username=in.('+usernames.map(u=>encodeURIComponent(u)).join(',')+')', {
+        method: 'DELETE', headers: h
+      });
+    }
+    // Xóa users
+    const res = await fetch(SB_URL+'/rest/v1/users?id=in.('+ids.join(',')+')', {
+      method: 'DELETE', headers: h
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || res.statusText);
+    }
+    ALL_USERS = ALL_USERS.filter(u => !SELECTED_IDS.has(u.id));
+    UF_DATA   = UF_DATA.filter(r => !usernames.includes(r.username));
+    if (usernames.includes(UF_SELECTED)) {
+      UF_SELECTED = null;
+      document.getElementById('perm-selected-label').textContent = '← Chọn user để xem quyền';
+      renderPermRights();
+    }
+    SELECTED_IDS.clear();
+    renderStats();
+    renderUserTable(true);
+    renderPermUsers();
+    showSaveStatus('✅ Đã xóa ' + ids.length + ' user', false);
+  } catch(e) {
+    alert('Lỗi xóa: ' + e.message);
+  }
 }
 
 // ── Delete User ───────────────────────────────────────────────
