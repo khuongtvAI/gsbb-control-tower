@@ -81,8 +81,11 @@
 .logout-btn:hover { color:white; border-color:#dc2626; background:#dc262622; }
 
 /* ── Delete button ───────────────────────────────────────────── */
-.btn-del { background:none; border:none; cursor:pointer; font-size:0.95rem; padding:0.1rem 0.3rem; border-radius:5px; opacity:0.35; transition:opacity .15s, background .15s; }
-.btn-del:hover { opacity:1; background:#fee2e2; }
+.btn-del  { background:none; border:none; cursor:pointer; font-size:0.95rem; padding:0.1rem 0.3rem; border-radius:5px; opacity:0.35; transition:opacity .15s, background .15s; }
+.btn-del:hover  { opacity:1; background:#fee2e2; }
+.btn-edit { background:none; border:none; cursor:pointer; font-size:0.95rem; padding:0.1rem 0.3rem; border-radius:5px; opacity:0.35; transition:opacity .15s, background .15s; }
+.btn-edit:hover { opacity:1; background:#dbeafe; }
+.action-cell { display:flex; align-items:center; gap:2px; }
 .chk-col { width:32px; text-align:center; }
 .chk-col input[type=checkbox] { width:15px; height:15px; cursor:pointer; accent-color:var(--green); }
 .btn-danger { background:#dc2626; color:white; border-color:#dc2626; }
@@ -351,6 +354,78 @@
   </div>
 </div>
 
+<!-- ── Edit User modal ── -->
+<div id="edit-user-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>✏️ Sửa User — <span id="eu-title-name" style="color:var(--green)"></span></h3>
+      <button class="modal-close" onclick="closeEditUser()">&#x2715;</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Username <span style="font-size:0.7rem;color:var(--muted);text-transform:none">(không thể thay đổi)</span></label>
+        <input class="form-input" id="eu-username" type="text" disabled style="background:#f3f4f6;color:var(--muted)">
+      </div>
+      <div class="form-group">
+        <label class="form-label req">Họ tên (full_name)</label>
+        <input class="form-input" id="eu-fullname" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="eu-email" type="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Điện thoại</label>
+        <input class="form-input" id="eu-phone" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mật khẩu mới <span style="font-size:0.7rem;color:var(--muted);text-transform:none">(để trống = giữ nguyên)</span></label>
+        <input class="form-input" id="eu-password" type="password" placeholder="Nhập để đổi mật khẩu...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rank</label>
+        <input class="form-input" id="eu-rank" type="text" placeholder="vd: IV">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phòng ban</label>
+        <select class="form-select" id="eu-depart">
+          <option value="">— Chọn phòng ban —</option>
+          <option value="1">1 — SX (Sản xuất)</option>
+          <option value="2">2 — QC (Chất lượng)</option>
+          <option value="3">3 — SCM (Chuỗi cung ứng)</option>
+          <option value="4">4 — HR (Nhân sự)</option>
+          <option value="5">5 — IT</option>
+          <option value="6">6 — Finance (Tài chính)</option>
+          <option value="7">7 — Sales (Kinh doanh)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-select" id="eu-role">
+          <option value="">— Chọn role —</option>
+          <option value="1">1 — CEO</option>
+          <option value="2">2 — Staff</option>
+          <option value="3">3 — Manager</option>
+          <option value="4">4 — Admin</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Tùy chọn</label>
+        <div class="form-check-row">
+          <label class="form-check"><input type="checkbox" id="eu-active"> Active</label>
+          <label class="form-check"><input type="checkbox" id="eu-admin"> Administrator</label>
+          <label class="form-check"><input type="checkbox" id="eu-on-off"> Is On/Off</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span class="modal-status" id="edit-user-status"></span>
+      <button class="btn btn-outline" onclick="closeEditUser()">Hủy</button>
+      <button class="btn btn-green" onclick="submitEditUser()">💾 Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /admin-wrap -->
 
 <script>
@@ -423,7 +498,7 @@ let CT_FUNCTIONS = [];  // loaded from functions table
 // ── Fetch ─────────────────────────────────────────────────────
 async function fetchUsers() {
   const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
-  const res = await fetch(SB_URL+'/rest/v1/users?select=id,username,full_name,email,role_code,rank_code,depart_code,is_active,is_administrator&order=username.asc&limit=500', { headers: h });
+  const res = await fetch(SB_URL+'/rest/v1/users?select=id,username,full_name,email,phone,role_code,rank_code,depart_code,is_active,is_administrator,is_on_off&order=username.asc&limit=500', { headers: h });
   if (!res.ok) throw new Error('HTTP '+res.status);
   return res.json();
 }
@@ -527,9 +602,12 @@ function renderUserTable(resetPage) {
         </label>
       </td>
       <td>
-        ${u.is_administrator
-          ? '<span title="Admin không được xóa" style="opacity:0.2;font-size:0.95rem;padding:0.1rem 0.3rem">🔒</span>'
-          : `<button class="btn-del" title="Xóa user ${u.username}" onclick="deleteUser('${u.id}','${u.username}')">🗑</button>`}
+        <div class="action-cell">
+          <button class="btn-edit" title="Sửa user ${u.username}" onclick="openEditUser('${u.id}')">✏️</button>
+          ${u.is_administrator
+            ? '<span title="Admin không được xóa" style="opacity:0.2;font-size:0.95rem;padding:0.1rem 0.3rem">🔒</span>'
+            : `<button class="btn-del" title="Xóa user ${u.username}" onclick="deleteUser('${u.id}','${u.username}')">🗑</button>`}
+        </div>
       </td>
     </tr>`).join('');
 
@@ -943,15 +1021,111 @@ async function submitAddUser() {
     const [newUser] = await res.json();
     ALL_USERS.push({
       id: newUser.id, username: newUser.username, full_name: newUser.full_name,
-      email: newUser.email, role_code: newUser.role_code, rank_code: newUser.rank_code,
-      depart_code: newUser.depart_code, is_active: newUser.is_active,
-      is_administrator: newUser.is_administrator,
+      email: newUser.email, phone: newUser.phone, role_code: newUser.role_code,
+      rank_code: newUser.rank_code, depart_code: newUser.depart_code,
+      is_active: newUser.is_active, is_administrator: newUser.is_administrator,
+      is_on_off: newUser.is_on_off,
     });
     renderStats();
     renderUserTable(true);
     renderPermUsers();
     closeAddUser();
     showSaveStatus('✅ Đã tạo user: ' + username, false);
+  } catch(e) {
+    s.textContent = '❌ Lỗi: ' + e.message;
+    s.className += ' err';
+  }
+}
+
+// ── Edit User ─────────────────────────────────────────────────
+let EDIT_USER_ID = null;
+
+function openEditUser(userId) {
+  const u = ALL_USERS.find(x => x.id === userId);
+  if (!u) return;
+  EDIT_USER_ID = userId;
+
+  document.getElementById('eu-title-name').textContent = u.username;
+  document.getElementById('eu-username').value  = u.username;
+  document.getElementById('eu-fullname').value  = u.full_name  || '';
+  document.getElementById('eu-email').value     = u.email      || '';
+  document.getElementById('eu-phone').value     = u.phone      || '';
+  document.getElementById('eu-password').value  = '';
+  document.getElementById('eu-rank').value      = u.rank_code  || '';
+  document.getElementById('eu-depart').value    = u.depart_code != null ? String(u.depart_code) : '';
+  document.getElementById('eu-role').value      = u.role_code  != null ? String(u.role_code)   : '';
+  document.getElementById('eu-active').checked  = !!u.is_active;
+  document.getElementById('eu-admin').checked   = !!u.is_administrator;
+  document.getElementById('eu-on-off').checked  = !!u.is_on_off;
+
+  const s = document.getElementById('edit-user-status');
+  s.textContent = ''; s.className = 'modal-status';
+  document.getElementById('edit-user-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('eu-fullname').focus(), 50);
+}
+
+function closeEditUser() {
+  document.getElementById('edit-user-modal').classList.add('hidden');
+  EDIT_USER_ID = null;
+}
+
+async function submitEditUser() {
+  if (!EDIT_USER_ID) return;
+  const full_name = document.getElementById('eu-fullname').value.trim();
+  const email     = document.getElementById('eu-email').value.trim() || null;
+  const phone     = document.getElementById('eu-phone').value.trim() || null;
+  const password  = document.getElementById('eu-password').value;
+  const rank_code = document.getElementById('eu-rank').value.trim() || null;
+  const depart    = document.getElementById('eu-depart').value;
+  const role      = document.getElementById('eu-role').value;
+  const is_active        = document.getElementById('eu-active').checked;
+  const is_administrator = document.getElementById('eu-admin').checked;
+  const is_on_off        = document.getElementById('eu-on-off').checked;
+
+  const s = document.getElementById('edit-user-status');
+  s.className = 'modal-status';
+  if (!full_name) { s.textContent = '⚠ Họ tên là bắt buộc.'; s.className += ' err'; return; }
+
+  const adminName = sessionStorage.getItem('gsbb_admin_name') || 'admin';
+  const payload = {
+    full_name, email, phone, rank_code,
+    depart_code:      depart ? parseInt(depart) : null,
+    role_code:        role   ? parseInt(role)   : null,
+    is_active, is_administrator, is_on_off,
+    modified_by:      adminName,
+    change_date:      new Date().toISOString(),
+  };
+  if (password) payload.password_hash = await sha256hex(password);
+
+  // Xóa null fields
+  Object.keys(payload).forEach(k => { if (payload[k] === null) delete payload[k]; });
+
+  const h = {
+    'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation',
+  };
+
+  s.textContent = 'Đang lưu...';
+  try {
+    const res = await fetch(SB_URL+'/rest/v1/users?id=eq.'+EDIT_USER_ID, {
+      method: 'PATCH', headers: h, body: JSON.stringify(payload)
+    });
+    const result = await res.json().catch(() => []);
+    if (!res.ok) throw new Error(result?.message || result?.details || res.statusText);
+    if (!result.length) throw new Error('Không cập nhật được — user không tồn tại.');
+
+    // Cập nhật local state
+    const updated = result[0];
+    const idx = ALL_USERS.findIndex(u => u.id === EDIT_USER_ID);
+    if (idx !== -1) {
+      ALL_USERS[idx] = { ...ALL_USERS[idx], ...updated };
+    }
+    renderStats();
+    renderUserTable();
+    renderPermUsers();
+    closeEditUser();
+    showSaveStatus('✅ Đã cập nhật user: ' + updated.username, false);
   } catch(e) {
     s.textContent = '❌ Lỗi: ' + e.message;
     s.className += ' err';
