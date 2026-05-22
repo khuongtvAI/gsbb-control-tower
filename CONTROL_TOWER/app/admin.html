@@ -148,7 +148,10 @@
     <p>Chỉ Administrator mới có thể truy cập</p>
     <div class="login-field">
       <input type="text" id="login-user" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter') doLogin()">
-      <input type="password" id="login-pass" placeholder="Mật khẩu" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
+      <div style="position:relative">
+        <input type="password" id="login-pass" placeholder="Mật khẩu" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()" style="padding-right:2.4rem;width:100%;box-sizing:border-box">
+        <button type="button" onclick="(function(){var i=document.getElementById('login-pass');var b=document.getElementById('login-pass-eye');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈'})()" id="login-pass-eye" tabindex="-1" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;padding:0;line-height:1;opacity:.6">👁</button>
+      </div>
     </div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">Đăng nhập</button>
     <div class="login-err" id="login-err"></div>

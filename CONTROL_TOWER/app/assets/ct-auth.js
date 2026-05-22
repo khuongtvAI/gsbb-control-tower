@@ -87,8 +87,11 @@
         <h2>GSBB Control Tower</h2>
         <p>Đăng nhập để tiếp tục</p>
         <div class="ct-login-field">
-          <input type="text"     id="ct-login-user" placeholder="Username"  autocomplete="username"         onkeydown="if(event.key==='Enter')ctLoginSubmit()">
-          <input type="password" id="ct-login-pass" placeholder="Mật khẩu" autocomplete="current-password" onkeydown="if(event.key==='Enter')ctLoginSubmit()">
+          <input type="text" id="ct-login-user" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter')ctLoginSubmit()">
+          <div style="position:relative">
+            <input type="password" id="ct-login-pass" placeholder="Mật khẩu" autocomplete="current-password" onkeydown="if(event.key==='Enter')ctLoginSubmit()" style="padding-right:2.4rem;width:100%;box-sizing:border-box;padding:.6rem .85rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:.9rem;outline:none;transition:border-color .15s">
+            <button type="button" onclick="(function(){var i=document.getElementById('ct-login-pass');var b=document.getElementById('ct-pass-eye');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈'})()" id="ct-pass-eye" tabindex="-1" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;padding:0;line-height:1;opacity:.6">👁</button>
+          </div>
         </div>
         <button class="ct-login-btn" id="ct-login-btn" onclick="ctLoginSubmit()">Đăng nhập</button>
         <div class="ct-login-err" id="ct-login-err"></div>
