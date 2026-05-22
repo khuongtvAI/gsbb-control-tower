@@ -75,6 +75,10 @@
 .logout-btn { font-size:0.75rem; padding:0.3rem 0.75rem; border:1px solid #4a7a5a; border-radius:5px; color:#9ca3af; background:transparent; cursor:pointer; transition:all .15s; }
 .logout-btn:hover { color:white; border-color:#dc2626; background:#dc262622; }
 
+/* ── Delete button ───────────────────────────────────────────── */
+.btn-del { background:none; border:none; cursor:pointer; font-size:0.95rem; padding:0.1rem 0.3rem; border-radius:5px; opacity:0.35; transition:opacity .15s, background .15s; }
+.btn-del:hover { opacity:1; background:#fee2e2; }
+
 /* ── Add User modal ──────────────────────────────────────────── */
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:8000; }
 .modal-overlay.hidden { display:none; }
@@ -205,6 +209,7 @@
             <th>Admin</th>
             <th>Trạng thái</th>
             <th>Active</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="user-tbody"></tbody>
@@ -492,6 +497,9 @@ function renderUserTable(resetPage) {
           <span class="toggle-slider"></span>
         </label>
       </td>
+      <td>
+        <button class="btn-del" title="Xóa user ${u.username}" onclick="deleteUser('${u.id}','${u.username}')">🗑</button>
+      </td>
     </tr>`).join('');
 
   // Update section badge
@@ -685,6 +693,43 @@ function showPermStatus(msg, isErr) {
   el.textContent = msg;
   el.className = 'save-status' + (isErr?' err':'');
   setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+// ── Delete User ───────────────────────────────────────────────
+async function deleteUser(userId, username) {
+  if (!confirm(`Xóa user "${username}"?\n\nThao tác này sẽ xóa vĩnh viễn user và toàn bộ phân quyền của họ.`)) return;
+
+  const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
+  try {
+    // 1. Xóa users_functions trước
+    await fetch(SB_URL+'/rest/v1/users_functions?username=eq.'+encodeURIComponent(username), {
+      method: 'DELETE', headers: h
+    });
+
+    // 2. Xóa user
+    const res = await fetch(SB_URL+'/rest/v1/users?id=eq.'+userId, {
+      method: 'DELETE', headers: h
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || res.statusText);
+    }
+
+    // Cập nhật local state
+    ALL_USERS = ALL_USERS.filter(u => u.id !== userId);
+    UF_DATA   = UF_DATA.filter(r => r.username !== username);
+    if (UF_SELECTED === username) {
+      UF_SELECTED = null;
+      document.getElementById('perm-selected-label').textContent = '← Chọn user để xem quyền';
+      renderPermRights();
+    }
+    renderStats();
+    renderUserTable();
+    renderPermUsers();
+    showSaveStatus('✅ Đã xóa user: ' + username, false);
+  } catch(e) {
+    alert('Lỗi xóa user: ' + e.message);
+  }
 }
 
 // ── Add User ──────────────────────────────────────────────────
