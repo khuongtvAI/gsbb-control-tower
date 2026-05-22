@@ -142,7 +142,7 @@
 
       const res  = await fetch(
         `${SB_URL}/rest/v1/users?select=id,username,full_name,is_active,is_administrator`
-        + `&username=eq.${encodeURIComponent(username)}&password_hash=eq.${hash}&limit=1`,
+        + `&username=ilike.${encodeURIComponent(username)}&password_hash=eq.${hash}&limit=1`,
         { headers: h }
       );
       if (!res.ok) throw new Error('Lỗi kết nối (' + res.status + ').');

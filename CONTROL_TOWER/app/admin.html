@@ -461,7 +461,7 @@ async function doLogin() {
     const hash = await sha256hex(password);
     const url  = `${SB_URL}/rest/v1/users`
                + `?select=id,username,full_name,is_active,is_administrator`
-               + `&username=eq.${encodeURIComponent(username)}`
+               + `&username=ilike.${encodeURIComponent(username)}`
                + `&password_hash=eq.${hash}`
                + `&limit=1`;
     const res  = await fetch(url, { headers: { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON } });
