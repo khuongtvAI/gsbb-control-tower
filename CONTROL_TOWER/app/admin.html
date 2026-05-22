@@ -505,13 +505,14 @@ async function fetchUsers() {
 
 async function fetchFunctions() {
   const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
-  const res = await fetch(SB_URL+'/rest/v1/functions?select=function_id,function_name,function_desc&order=function_id.asc', { headers: h });
+  const res = await fetch(SB_URL+'/rest/v1/functions?select=function_id,function_name,function_desc,url&order=function_id.asc', { headers: h });
   if (!res.ok) return [];
   const rows = await res.json();
   return rows.map(r => ({
     id:   r.function_id,
     name: r.function_name,
     desc: r.function_desc || '',
+    url:  r.url || '',
     icon: FN_ICON[r.function_id] || '📄',
   }));
 }
@@ -727,7 +728,7 @@ function renderPermRights() {
     const val = getUFVal(UF_SELECTED, p.id);
     const dirty = key in UF_CHANGES;
     return `<tr>
-      <td>${p.icon} ${p.name}</td>
+      <td>${p.icon} ${p.url ? `<a href="${p.url}" target="_blank" style="color:inherit;text-decoration:none" title="Mở ${p.url}">${p.name}</a>` : p.name}</td>
       <td class="${dirty?'dirty':''}">
         <input type="checkbox" ${val.can_edit?'checked':''} data-u="${UF_SELECTED}" data-fid="${p.id}" data-col="edit" onchange="onPermChange(this)">
       </td>
