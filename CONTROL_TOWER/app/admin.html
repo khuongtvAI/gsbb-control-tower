@@ -489,7 +489,7 @@ function renderUserTable(resetPage) {
   const tbody = document.getElementById('user-tbody');
   tbody.innerHTML = page.map((u, i) => `
     <tr>
-      <td class="chk-col"><input type="checkbox" class="row-cb" data-id="${u.id}" ${SELECTED_IDS.has(u.id)?'checked':''} onchange="toggleRowSelect('${u.id}')"></td>
+      <td class="chk-col"><input type="checkbox" class="row-cb" data-id="${u.id}" ${SELECTED_IDS.has(u.id)?'checked':''} ${u.is_administrator?'disabled title="Admin không được xóa"':''} onchange="toggleRowSelect('${u.id}')"></td>
       <td style="color:var(--muted)">${start + i + 1}</td>
       <td><strong>${u.username}</strong></td>
       <td>${u.full_name||'—'}</td>
@@ -506,7 +506,9 @@ function renderUserTable(resetPage) {
         </label>
       </td>
       <td>
-        <button class="btn-del" title="Xóa user ${u.username}" onclick="deleteUser('${u.id}','${u.username}')">🗑</button>
+        ${u.is_administrator
+          ? '<span title="Admin không được xóa" style="opacity:0.2;font-size:0.95rem;padding:0.1rem 0.3rem">🔒</span>'
+          : `<button class="btn-del" title="Xóa user ${u.username}" onclick="deleteUser('${u.id}','${u.username}')">🗑</button>`}
       </td>
     </tr>`).join('');
 
@@ -743,8 +745,20 @@ function updateBulkBar() {
 async function bulkDeleteUsers() {
   const ids = Array.from(SELECTED_IDS);
   if (!ids.length) return;
-  const usernames = ids.map(id => ALL_USERS.find(u => u.id === id)?.username).filter(Boolean);
-  if (!confirm(`Xóa ${ids.length} user?\n\n${usernames.join(', ')}\n\nThao tác này không thể hoàn tác.`)) return;
+
+  // Lọc ra admin — không bao giờ xóa
+  const adminBlocked = ids.filter(id => ALL_USERS.find(u => u.id === id)?.is_administrator);
+  const safeIds = ids.filter(id => !ALL_USERS.find(u => u.id === id)?.is_administrator);
+
+  if (adminBlocked.length) {
+    const adminNames = adminBlocked.map(id => ALL_USERS.find(u => u.id === id)?.username).join(', ');
+    alert(`⚠ Bỏ qua ${adminBlocked.length} Administrator (không được xóa):\n${adminNames}`);
+  }
+  if (!safeIds.length) return;
+
+  const ids_to_delete = safeIds;
+  const usernames = ids_to_delete.map(id => ALL_USERS.find(u => u.id === id)?.username).filter(Boolean);
+  if (!confirm(`Xóa ${ids_to_delete.length} user?\n\n${usernames.join(', ')}\n\nThao tác này không thể hoàn tác.`)) return;
 
   const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
   try {
@@ -755,14 +769,15 @@ async function bulkDeleteUsers() {
       });
     }
     // Xóa users
-    const res = await fetch(SB_URL+'/rest/v1/users?id=in.('+ids.join(',')+')', {
+    const res = await fetch(SB_URL+'/rest/v1/users?id=in.('+ids_to_delete.join(',')+')', {
       method: 'DELETE', headers: h
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ message: res.statusText }));
       throw new Error(err.message || res.statusText);
     }
-    ALL_USERS = ALL_USERS.filter(u => !SELECTED_IDS.has(u.id));
+    const deletedSet = new Set(ids_to_delete);
+    ALL_USERS = ALL_USERS.filter(u => !deletedSet.has(u.id));
     UF_DATA   = UF_DATA.filter(r => !usernames.includes(r.username));
     if (usernames.includes(UF_SELECTED)) {
       UF_SELECTED = null;
@@ -773,7 +788,7 @@ async function bulkDeleteUsers() {
     renderStats();
     renderUserTable(true);
     renderPermUsers();
-    showSaveStatus('✅ Đã xóa ' + ids.length + ' user', false);
+    showSaveStatus('✅ Đã xóa ' + ids_to_delete.length + ' user', false);
   } catch(e) {
     alert('Lỗi xóa: ' + e.message);
   }
@@ -781,6 +796,8 @@ async function bulkDeleteUsers() {
 
 // ── Delete User ───────────────────────────────────────────────
 async function deleteUser(userId, username) {
+  const u = ALL_USERS.find(x => x.id === userId);
+  if (u?.is_administrator) { alert(`Không thể xóa user "${username}" — Administrator được bảo vệ.`); return; }
   if (!confirm(`Xóa user "${username}"?\n\nThao tác này sẽ xóa vĩnh viễn user và toàn bộ phân quyền của họ.`)) return;
 
   const h = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
