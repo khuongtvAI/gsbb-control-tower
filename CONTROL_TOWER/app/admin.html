@@ -71,6 +71,11 @@
 .save-status { font-size:0.8rem; color:var(--green); font-weight:600; }
 .save-status.err { color:var(--red); }
 
+/* ── Global toast ────────────────────────────────────────────── */
+#global-toast { position:fixed; bottom:1.5rem; right:1.5rem; padding:0.6rem 1.1rem; border-radius:8px; font-size:0.82rem; font-weight:600; background:#166534; color:white; box-shadow:0 4px 16px rgba(0,0,0,.18); z-index:9000; opacity:0; transform:translateY(6px); transition:opacity .2s,transform .2s; pointer-events:none; }
+#global-toast.show { opacity:1; transform:translateY(0); }
+#global-toast.err { background:#b91c1c; }
+
 /* ── Logout btn ──────────────────────────────────────────────── */
 .logout-btn { font-size:0.75rem; padding:0.3rem 0.75rem; border:1px solid #4a7a5a; border-radius:5px; color:#9ca3af; background:transparent; cursor:pointer; transition:all .15s; }
 .logout-btn:hover { color:white; border-color:#dc2626; background:#dc262622; }
@@ -129,6 +134,8 @@
 </style>
 </head>
 <body>
+
+<div id="global-toast"></div>
 
 <!-- ── Login overlay ── -->
 <div id="login-overlay" class="login-overlay" style="display:flex">
@@ -449,7 +456,7 @@ async function init() {
   } catch(e) {
     console.error('[Admin] init error:', e);
     const tbody = document.getElementById('user-tbody');
-    if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--red)">❌ Lỗi tải dữ liệu: ${e.message}</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:2rem;color:var(--red)">❌ Lỗi tải dữ liệu: ${e.message}</td></tr>`;
     alert('Lỗi tải dữ liệu: ' + e.message);
   }
 }
@@ -467,12 +474,15 @@ function renderStats() {
 }
 
 
+let _toastTimer;
 function showSaveStatus(msg, isErr) {
-  const el = document.getElementById('save-status');
+  const el = document.getElementById('global-toast');
   if (!el) return;
+  clearTimeout(_toastTimer);
   el.textContent = msg;
-  el.className = 'save-status' + (isErr?' err':'');
-  setTimeout(() => { el.textContent = ''; }, 4000);
+  el.className = isErr ? 'err' : '';
+  el.classList.add('show');
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
 }
 
 // ── User table with pagination ────────────────────────────────
@@ -678,7 +688,9 @@ async function saveFuncPerms() {
   if (!keys.length) { showPermStatus('Không có thay đổi nào.', false); return; }
 
   const rows = keys.map(key => {
-    const [username, fid] = key.split('_');
+    const sep = key.lastIndexOf('_');
+    const username = key.slice(0, sep);
+    const fid      = key.slice(sep + 1);
     const v = UF_CHANGES[key];
     return { username, function_id: parseInt(fid), can_edit: v.can_edit, can_view: v.can_view };
   });
@@ -696,8 +708,9 @@ async function saveFuncPerms() {
 
     // Merge into UF_DATA
     keys.forEach(key => {
-      const [username, fid] = key.split('_');
-      const fidN = parseInt(fid);
+      const sep  = key.lastIndexOf('_');
+      const username = key.slice(0, sep);
+      const fidN = parseInt(key.slice(sep + 1));
       const existing = UF_DATA.find(r => r.username===username && r.function_id===fidN);
       if (existing) { existing.can_edit = UF_CHANGES[key].can_edit; existing.can_view = UF_CHANGES[key].can_view; }
       else UF_DATA.push({ username, function_id: fidN, ...UF_CHANGES[key] });
