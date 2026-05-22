@@ -75,6 +75,30 @@
 .logout-btn { font-size:0.75rem; padding:0.3rem 0.75rem; border:1px solid #4a7a5a; border-radius:5px; color:#9ca3af; background:transparent; cursor:pointer; transition:all .15s; }
 .logout-btn:hover { color:white; border-color:#dc2626; background:#dc262622; }
 
+/* ── Add User modal ──────────────────────────────────────────── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:8000; }
+.modal-overlay.hidden { display:none; }
+.modal-card { background:white; border-radius:12px; padding:1.75rem; width:580px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.25rem; padding-bottom:0.75rem; border-bottom:2px solid var(--border); }
+.modal-header h3 { font-size:1rem; font-weight:800; color:var(--text); margin:0; }
+.modal-close { background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted); line-height:1; padding:0.2rem 0.5rem; border-radius:5px; }
+.modal-close:hover { background:#f3f4f6; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem 1rem; }
+@media(max-width:520px){ .form-grid { grid-template-columns:1fr; } }
+.form-group { display:flex; flex-direction:column; gap:0.3rem; }
+.form-group.full { grid-column:1/-1; }
+.form-label { font-size:0.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.form-label.req::after { content:" *"; color:var(--red); }
+.form-input, .form-select { padding:0.48rem 0.75rem; border:1.5px solid var(--border); border-radius:7px; font-size:0.85rem; outline:none; background:white; transition:border-color .15s; width:100%; box-sizing:border-box; }
+.form-input:focus, .form-select:focus { border-color:var(--green); }
+.form-check-row { display:flex; align-items:center; gap:1.25rem; padding:0.4rem 0; flex-wrap:wrap; }
+.form-check { display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; cursor:pointer; }
+.form-check input { width:16px; height:16px; accent-color:var(--green); cursor:pointer; }
+.modal-footer { display:flex; align-items:center; justify-content:flex-end; gap:0.75rem; margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border); }
+.modal-status { font-size:0.78rem; margin-right:auto; }
+.modal-status.err { color:var(--red); font-weight:600; }
+.modal-status.ok  { color:var(--green); font-weight:600; }
+
 /* ── Edit/View permission layout ────────────────────────────── */
 .perm-layout { display:grid; grid-template-columns:220px 1fr; gap:1rem; align-items:start; }
 @media(max-width:700px){ .perm-layout { grid-template-columns:1fr; } }
@@ -164,6 +188,7 @@
       <div class="toolbar">
         <input type="text" id="user-search2" placeholder="🔍 Tìm user..." oninput="renderUserTable(true)">
         <label><input type="checkbox" id="show-inactive2" onchange="renderUserTable(true)"> Hiển thị inactive</label>
+        <button class="btn btn-green" onclick="openAddUser()">＋ Thêm User</button>
       </div>
     </div>
     <div style="overflow-x:auto">
@@ -235,6 +260,79 @@
     </div>
   </div>
 </main>
+
+<!-- ── Add User modal ── -->
+<div id="add-user-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>＋ Thêm User mới</h3>
+      <button class="modal-close" onclick="closeAddUser()">&#x2715;</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label req">Username</label>
+        <input class="form-input" id="nu-username" type="text" placeholder="vd: nguyenvan.a">
+      </div>
+      <div class="form-group">
+        <label class="form-label req">Họ tên (full_name)</label>
+        <input class="form-input" id="nu-fullname" type="text" placeholder="Nguyễn Văn A">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="nu-email" type="email" placeholder="email@gsbb.vn">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Điện thoại</label>
+        <input class="form-input" id="nu-phone" type="text" placeholder="0901 234 567">
+      </div>
+      <div class="form-group">
+        <label class="form-label req">Password</label>
+        <input class="form-input" id="nu-password" type="password" placeholder="Mật khẩu đăng nhập">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rank</label>
+        <input class="form-input" id="nu-rank" type="text" placeholder="vd: IV">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phòng ban</label>
+        <select class="form-select" id="nu-depart">
+          <option value="">— Chọn phòng ban —</option>
+          <option value="1">1 — SX (Sản xuất)</option>
+          <option value="2">2 — QC (Chất lượng)</option>
+          <option value="3">3 — SCM (Chuỗi cung ứng)</option>
+          <option value="4">4 — HR (Nhân sự)</option>
+          <option value="5">5 — IT</option>
+          <option value="6">6 — Finance (Tài chính)</option>
+          <option value="7">7 — Sales (Kinh doanh)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-select" id="nu-role">
+          <option value="">— Chọn role —</option>
+          <option value="1">1 — CEO</option>
+          <option value="2" selected>2 — Staff</option>
+          <option value="3">3 — Manager</option>
+          <option value="4">4 — Admin</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Tùy chọn</label>
+        <div class="form-check-row">
+          <label class="form-check"><input type="checkbox" id="nu-active" checked> Active</label>
+          <label class="form-check"><input type="checkbox" id="nu-admin"> Administrator</label>
+          <label class="form-check"><input type="checkbox" id="nu-on-off"> Is On/Off</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span class="modal-status" id="add-user-status"></span>
+      <button class="btn btn-outline" onclick="closeAddUser()">Hủy</button>
+      <button class="btn btn-green" onclick="submitAddUser()">💾 Tạo User</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /admin-wrap -->
 
 <script>
@@ -587,6 +685,102 @@ function showPermStatus(msg, isErr) {
   el.textContent = msg;
   el.className = 'save-status' + (isErr?' err':'');
   setTimeout(() => { el.textContent = ''; }, 4000);
+}
+
+// ── Add User ──────────────────────────────────────────────────
+function openAddUser() {
+  ['nu-username','nu-fullname','nu-email','nu-phone','nu-password','nu-rank'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('nu-depart').value = '';
+  document.getElementById('nu-role').value   = '2';
+  document.getElementById('nu-active').checked = true;
+  document.getElementById('nu-admin').checked  = false;
+  document.getElementById('nu-on-off').checked = false;
+  const s = document.getElementById('add-user-status');
+  s.textContent = ''; s.className = 'modal-status';
+  document.getElementById('add-user-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('nu-username').focus(), 50);
+}
+
+function closeAddUser() {
+  document.getElementById('add-user-modal').classList.add('hidden');
+}
+
+async function submitAddUser() {
+  const username  = document.getElementById('nu-username').value.trim();
+  const full_name = document.getElementById('nu-fullname').value.trim();
+  const email     = document.getElementById('nu-email').value.trim() || null;
+  const phone     = document.getElementById('nu-phone').value.trim() || null;
+  const password  = document.getElementById('nu-password').value;
+  const rank_code = document.getElementById('nu-rank').value.trim() || null;
+  const depart    = document.getElementById('nu-depart').value;
+  const role      = document.getElementById('nu-role').value;
+  const is_active        = document.getElementById('nu-active').checked;
+  const is_administrator = document.getElementById('nu-admin').checked;
+  const is_on_off        = document.getElementById('nu-on-off').checked;
+
+  const s = document.getElementById('add-user-status');
+  s.className = 'modal-status';
+
+  if (!username)  { s.textContent = '⚠ Username là bắt buộc.';  s.className += ' err'; return; }
+  if (!full_name) { s.textContent = '⚠ Họ tên là bắt buộc.';   s.className += ' err'; return; }
+  if (!password)  { s.textContent = '⚠ Password là bắt buộc.'; s.className += ' err'; return; }
+  if (ALL_USERS.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+    s.textContent = '⚠ Username đã tồn tại trong hệ thống.'; s.className += ' err'; return;
+  }
+
+  const adminName = sessionStorage.getItem('gsbb_admin_name') || 'admin';
+  const now = new Date().toISOString();
+
+  const payload = {
+    username, full_name, email, phone,
+    password_hash: password,
+    rank_code,
+    depart_code: depart ? parseInt(depart) : null,
+    role_code:   role   ? parseInt(role)   : null,
+    is_active, is_administrator, is_on_off,
+    user_window: username,
+    auth_type:   'Application',
+    create_by:   adminName,
+    modified_by: adminName,
+    create_date: now,
+    change_date: now,
+  };
+  // Remove null fields
+  Object.keys(payload).forEach(k => { if (payload[k] === null) delete payload[k]; });
+
+  const h = {
+    'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation',
+  };
+
+  s.textContent = 'Đang tạo user...';
+  try {
+    const res = await fetch(SB_URL+'/rest/v1/users', {
+      method: 'POST', headers: h, body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || err.details || res.statusText);
+    }
+    const [newUser] = await res.json();
+    ALL_USERS.push({
+      id: newUser.id, username: newUser.username, full_name: newUser.full_name,
+      email: newUser.email, role_code: newUser.role_code, rank_code: newUser.rank_code,
+      depart_code: newUser.depart_code, is_active: newUser.is_active,
+      is_administrator: newUser.is_administrator,
+    });
+    renderStats();
+    renderUserTable(true);
+    renderPermUsers();
+    closeAddUser();
+    showSaveStatus('✅ Đã tạo user: ' + username, false);
+  } catch(e) {
+    s.textContent = '❌ Lỗi: ' + e.message;
+    s.className += ' err';
+  }
 }
 
 // ── Boot ──────────────────────────────────────────────────────
