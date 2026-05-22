@@ -140,9 +140,10 @@
       const hash = await sha256hex(password);
       const h    = { apikey: SB_ANON, Authorization: 'Bearer ' + SB_ANON };
 
+      // Fetch by username only, compare hash client-side
       const res  = await fetch(
-        `${SB_URL}/rest/v1/users?select=id,username,full_name,is_active,is_administrator`
-        + `&username=ilike.${encodeURIComponent(username)}&password_hash=eq.${hash}&limit=1`,
+        `${SB_URL}/rest/v1/users?select=id,username,full_name,is_active,is_administrator,password_hash`
+        + `&username=ilike.${encodeURIComponent(username)}&limit=1`,
         { headers: h }
       );
       if (!res.ok) throw new Error('Lỗi kết nối (' + res.status + ').');
@@ -150,6 +151,7 @@
 
       if (!rows.length) { errEl.textContent = 'Sai username hoặc mật khẩu.'; return; }
       const user = rows[0];
+      if (user.password_hash !== hash) { errEl.textContent = 'Sai username hoặc mật khẩu.'; return; }
       if (!user.is_active) { errEl.textContent = 'Tài khoản đã bị vô hiệu hóa.'; return; }
 
       // Fetch accessible function URLs for non-admin
