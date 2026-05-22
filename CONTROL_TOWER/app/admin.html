@@ -479,7 +479,28 @@ async function doLogin() {
       errEl.textContent = 'Tài khoản đã bị vô hiệu hóa.'; return;
     }
     if (!user.is_administrator) {
-      errEl.textContent = 'Tài khoản không có quyền Admin.'; return;
+      // Non-admin: build ct-auth session and redirect to main site
+      btn.textContent = 'Đang chuyển hướng…';
+      const h2 = { 'apikey': SB_ANON, 'Authorization': 'Bearer '+SB_ANON };
+      let funcUrls = [];
+      const ufRes = await fetch(
+        `${SB_URL}/rest/v1/users_functions?select=functions(url)&user_id=eq.${user.id}`,
+        { headers: h2 }
+      );
+      if (ufRes.ok) {
+        const ufRows = await ufRes.json();
+        funcUrls = ufRows.map(r => r.functions && r.functions.url).filter(Boolean);
+      }
+      const ctSession = {
+        userId: user.id, username: user.username,
+        fullName: user.full_name || user.username,
+        isAdmin: false, funcUrls
+      };
+      sessionStorage.setItem('gsbb_ct_session', JSON.stringify(ctSession));
+      // Redirect to first accessible page, or index
+      const first = funcUrls.find(u => u) || 'index.html';
+      location.href = first.includes('/') ? first : first;
+      return;
     }
 
     const displayName = user.full_name || user.username;
